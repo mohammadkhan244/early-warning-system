@@ -400,7 +400,15 @@
     .question-input:focus { border-bottom-color: #5a3518; }
 
     /* ─── STAGE 6: ANALYSIS ─── */
-    #stage-6 .stage-content { text-align: center; }
+    #stage-6 {
+      align-items: flex-start;
+    }
+    #stage-6 .stage-content {
+      max-width: 760px;
+      width: 100%;
+      padding: 40px 24px;
+      text-align: left;
+    }
 
     .radar-container {
       width: 180px;
@@ -445,50 +453,79 @@
     }
     .loading-message.visible { opacity: 1; }
 
-    .analysis-container { display: none; text-align: left; }
+    .analysis-container {
+      display: none;
+      text-align: left;
+      max-width: 760px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0;
+    }
     .analysis-note {
-      font-size: 0.72rem;
-      color: #2e2e28;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 52px;
+      font-size: 12px;
+      font-style: italic;
+      color: rgba(240, 236, 228, 0.6);
       text-align: center;
+      margin-bottom: 40px;
+      width: 100%;
     }
     .analysis-section {
-      margin-bottom: 44px;
+      width: 100%;
+      margin-bottom: 32px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       opacity: 0;
       transition: opacity 0.5s ease;
     }
     .analysis-section.visible { opacity: 1; }
     .analysis-label {
-      font-size: 0.62rem;
-      letter-spacing: 0.22em;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
       color: #b87333;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     .analysis-text {
       font-family: Georgia, serif;
-      font-size: 0.98rem;
-      color: #b0aca4;
-      line-height: 1.85;
-      white-space: pre-wrap;
-    }
-    .analysis-section.one-action {
-      border-left: 2px solid #b87333;
-      padding-left: 22px;
-    }
-    .analysis-section.one-action .analysis-text {
-      font-size: 1.2rem;
+      font-size: 15px;
       color: #f0ece4;
       line-height: 1.7;
+      white-space: pre-wrap;
+      width: 100%;
+    }
+    .analysis-section.one-action {
+      border: 1px solid #b87333;
+      border-radius: 6px;
+      padding: 24px;
+      background: rgba(184, 115, 51, 0.05);
+      margin-bottom: 0;
+      padding-bottom: 24px;
+    }
+    .analysis-section.one-action .analysis-label {
+      color: #b87333;
+    }
+    .analysis-section.one-action .analysis-text {
+      font-size: 16px;
+      font-weight: 500;
+      color: #f0ece4;
+      line-height: 1.7;
+    }
+    .analysis-continue-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 40px 0 20px;
+    }
+    .analysis-continue-container button {
+      min-width: 200px;
     }
 
     .analysis-progress-wrap {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      height: 2px;
-      background: #0e0e0a;
+      height: 3px;
+      background: transparent;
       display: none;
       z-index: 100;
     }
@@ -497,6 +534,11 @@
       background: #b87333;
       width: 0%;
       transition: width 0.8s linear;
+    }
+
+    @media (max-width: 600px) {
+      #stage-6 .stage-content { padding: 24px 16px; }
+      .analysis-text { font-size: 14px; }
     }
 
     /* ─── STAGE 7: REVEAL ─── */
@@ -769,7 +811,7 @@
   <div class="stage-content">
 
     <!-- Radar loading -->
-    <div id="radar-loading">
+    <div id="radar-loading" style="text-align:center; width:100%;">
       <div class="radar-container">
         <svg id="radar-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
           <!-- Concentric rings -->
@@ -828,8 +870,8 @@
         <div class="analysis-text" id="txt-action"></div>
       </div>
 
-      <div style="margin-top:60px; text-align:center; padding-bottom:60px;">
-        <button id="analysis-continue" class="btn hidden" onclick="goToStage('stage-7'); initReveal()">Continue</button>
+      <div class="analysis-continue-container">
+        <button id="analysis-continue" class="hidden" onclick="goToStage('stage-7'); initReveal()">Continue</button>
       </div>
     </div>
 
