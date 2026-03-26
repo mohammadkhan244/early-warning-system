@@ -37,6 +37,7 @@ export default async function handler(req, res) {
             Email: String(body.email || ""),
             Completion_Time_Mins: Number(body.completionTime) || 0,
             Admin_Mode: Boolean(body.adminMode),
+            Partial: Boolean(body.partial || false),
             Timestamp: body.timestamp || new Date().toISOString(),
           },
         }),

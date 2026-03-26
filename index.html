@@ -37,9 +37,8 @@
 
     /* ─── CONTENT CONTAINER ─── */
     .stage-content {
-      max-width: 680px;
-      width: 90%;
-      padding: 80px 0;
+      max-width: 640px;
+      width: 100%;
     }
 
     /* ─── TYPOGRAPHY ─── */
@@ -172,21 +171,54 @@
     textarea { min-height: 70px; }
 
     /* ─── STAGE 1: INTRO ─── */
-    #stage-1 .stage-content { text-align: center; }
-    #stage-1 .body-copy {
-      text-align: left;
-      margin: 44px 0;
+    #stage-1 {
+      height: 100vh;
+      overflow: hidden;
+      padding: 40px 24px;
+      text-align: center;
+      justify-content: center;
+    }
+    .intro-content {
+      max-width: 640px;
+      width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      align-items: center;
+      gap: 16px;
     }
-    #stage-1 .body-copy p {
+    .intro-headline {
+      font-size: clamp(28px, 5vw, 48px);
+      line-height: 1.15;
       font-family: Georgia, serif;
-      font-size: 1.05rem;
-      color: #7a7670;
-      line-height: 1.85;
+      color: #f0ece4;
+      font-weight: normal;
       margin: 0;
     }
+    .intro-subhead {
+      font-size: clamp(14px, 2vw, 17px);
+      line-height: 1.5;
+      color: rgba(240,236,228,0.75);
+      margin: 0;
+      max-width: 520px;
+    }
+    .intro-disclaimer {
+      font-size: clamp(11px, 1.5vw, 13px);
+      color: rgba(240,236,228,0.4);
+      font-style: italic;
+      margin: 0;
+    }
+    .intro-body {
+      font-size: clamp(13px, 1.8vw, 15px);
+      line-height: 1.65;
+      color: rgba(240,236,228,0.8);
+      text-align: left;
+      margin: 0;
+      max-width: 560px;
+      width: 100%;
+    }
+    .intro-body p { margin: 0 0 10px 0; }
+    .intro-body p:last-child { margin-bottom: 0; }
+    .intro-cta-button { margin-top: 8px; min-width: 200px; }
 
     /* ─── BRANCH STAGE ─── */
     .branch-buttons {
@@ -258,18 +290,12 @@
     }
     .story-context-bar strong { color: #4a4a42; }
     .story-timer {
-      position: fixed;
-      top: 52px;
-      left: 50%;
-      transform: translateX(-50%);
       font-family: Georgia, 'Times New Roman', serif;
       font-size: 2.4rem;
       color: #b87333;
       opacity: 0.75;
       letter-spacing: 0.06em;
       transition: opacity 0.3s ease;
-      pointer-events: none;
-      z-index: 9;
     }
     .story-area {
       position: relative;
@@ -730,22 +756,29 @@
     .hidden { display: none !important; }
 
     /* ─── MIC BUTTON ─── */
+    .story-timer-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 0 8px;
+    }
     #mic-button {
       display: flex;
       align-items: center;
       gap: 8px;
       background: transparent;
-      border: 1px solid #b87333;
-      color: #b87333;
-      padding: 8px 16px;
-      border-radius: 4px;
+      border: none;
+      color: rgba(240,236,228,0.35);
       font-size: 13px;
       cursor: pointer;
-      margin-top: 12px;
-      transition: all 0.2s;
+      padding: 6px 12px;
+      border-radius: 4px;
+      transition: color 0.2s;
+      position: static;
     }
-    #mic-button:hover { background: rgba(184,115,51,0.1); }
-    #mic-button.listening { border-color: #cc3333; color: #cc3333; }
+    #mic-button:hover { color: #b87333; }
+    #mic-button.listening { color: #cc3333; }
     .mic-pulse {
       display: inline-block;
       width: 8px; height: 8px;
@@ -757,53 +790,70 @@
       0%, 100% { opacity: 1; transform: scale(1); }
       50%       { opacity: 0.5; transform: scale(1.3); }
     }
+
+    /* Test prompt — fixed full-screen overlay, always visible */
     #mic-test-prompt {
-      position: absolute;
-      bottom: calc(100% + 8px);
-      left: 0; right: 0;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,10,0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 24px;
+    }
+    .mic-test-inner {
       background: #1a1a1a;
       border: 1px solid #b87333;
-      border-radius: 6px;
-      padding: 20px;
-      z-index: 10;
+      border-radius: 8px;
+      padding: 32px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
     }
     .mic-test-instruction {
       font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: rgba(240,236,228,0.5);
-      margin-bottom: 8px;
+      letter-spacing: 0.12em;
+      color: rgba(240,236,228,0.4);
+      margin-bottom: 16px;
     }
     .mic-test-sentence {
-      font-size: 16px;
+      font-size: 18px;
       color: #f0ece4;
       font-style: italic;
-      margin-bottom: 16px;
+      line-height: 1.5;
+      margin-bottom: 24px;
     }
     .mic-test-transcript {
-      font-size: 13px;
+      font-size: 14px;
       color: #b87333;
-      min-height: 24px;
-      margin-bottom: 16px;
+      min-height: 28px;
+      margin-bottom: 24px;
       font-style: italic;
+      line-height: 1.5;
     }
-    .mic-test-buttons { display: flex; gap: 8px; }
-    .mic-test-buttons button:first-child { flex: 1; }
-    .mic-test-buttons button:last-child {
+    .mic-test-buttons { display: flex; flex-direction: column; gap: 10px; }
+    #mic-approve { width: 100%; }
+    #mic-approve:disabled { opacity: 0.35; cursor: not-allowed; background-color: #6b4a2a; }
+    #mic-cancel {
       background: transparent;
-      border: 1px solid rgba(240,236,228,0.2);
-      color: rgba(240,236,228,0.5);
+      border: 1px solid rgba(240,236,228,0.15);
+      color: rgba(240,236,228,0.4);
       padding: 10px 16px;
       border-radius: 4px;
       cursor: pointer;
+      font-size: 14px;
+      width: 100%;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    #mic-cancel:hover {
+      border-color: rgba(240,236,228,0.3);
+      color: rgba(240,236,228,0.6);
     }
     @media (max-width: 600px) {
-      .mic-test-buttons { flex-direction: column; }
-      #mic-test-prompt {
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
-        border-radius: 12px 12px 0 0;
-      }
+      .mic-test-inner { padding: 24px 20px; }
+      .mic-test-sentence { font-size: 16px; }
     }
 
     /* ─── RESPONSIVE ─── */
@@ -823,6 +873,14 @@
       }
       .questions-panel { width: 100%; padding: 32px 24px; }
     }
+    @media (max-width: 600px) {
+      #stage-1 { padding: 24px 20px; justify-content: flex-start; padding-top: 48px; overflow-y: auto; }
+      .intro-headline { font-size: 28px; line-height: 1.2; }
+      .intro-subhead { font-size: 14px; }
+      .intro-body { font-size: 13px; }
+      .stage { padding: 24px 20px; }
+      .stage-content { width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -831,17 +889,17 @@
      STAGE 1: INTRO
 ═══════════════════════════════════════════════ -->
 <div id="stage-1" class="stage">
-  <div class="stage-content">
-    <h1>Stress Test Your Ideas Before They Break</h1>
-    <p class="subhead">A 30-minute exercise that finds the hidden assumptions in your idea — before you spend years acting on them.</p>
-    <p class="disclaimer">(This isn't about predicting failure. It's about finding the cracks before they cost you.)</p>
-    <div class="body-copy">
-      <p>You have an idea. Maybe you've been sitting on it for months. Maybe you're about to commit to it. Maybe you just can't stop thinking about it.</p>
-      <p>The assumptions holding your idea up are invisible right now. You can't see them by thinking harder. You can't find them in a plan. But they'll surface in a story.</p>
-      <p>In the next 30 minutes you will find the hidden assumptions holding your idea up, see where your stated vision diverges from what your story actually revealed, and leave with three things to act on before you've committed to anything you can't undo.</p>
-      <p>Most people find out their assumptions were wrong after they've spent years acting on them. This is the alternative.</p>
+  <div class="intro-content">
+    <h1 class="intro-headline">Stress Test Your Ideas Before They Break</h1>
+    <p class="intro-subhead">A 30-minute exercise that finds the hidden assumptions in your idea — before you spend years acting on them.</p>
+    <p class="intro-disclaimer">(This isn't about predicting failure. It's about finding the cracks before they cost you.)</p>
+    <div class="intro-body">
+      <p>You have an idea. Maybe you've been sitting on it for months. Maybe you're about to commit to it.</p>
+      <p>The assumptions holding it up are invisible right now. You can't find them by thinking harder. They surface in a story.</p>
+      <p>In 30 minutes: find the hidden assumptions, see where your stated vision diverges from what you actually built, leave with three things to act on.</p>
+      <p>Most people find out their assumptions were wrong after years of acting on them. This is the alternative.</p>
     </div>
-    <button class="btn btn-primary" onclick="goToStage('stage-2')">Start the stress test</button>
+    <button class="btn btn-primary intro-cta-button" onclick="goToStage('stage-2')">Start the stress test</button>
   </div>
 </div>
 
@@ -968,7 +1026,10 @@
       <span><strong>Idea:</strong> <span id="context-signal"></span></span>
       <span><strong>Future:</strong> <span id="context-headline"></span></span>
     </div>
-    <div class="story-timer" id="story-timer"></div>
+    <div class="story-timer-row">
+      <div class="story-timer" id="story-timer"></div>
+      <button id="mic-button" onclick="micButtonClick()">🎤 Speak your story</button>
+    </div>
     <div class="story-area">
       <div class="story-instruction" id="story-instruction">
         <p id="story-instruction-text"></p>
@@ -980,7 +1041,6 @@
     <div class="story-nudge" id="story-nudge"></div>
     <div class="story-bottom-bar">
       <span class="word-count" id="word-count">0 words</span>
-      <button id="mic-button" onclick="micButtonClick()">🎤 Speak your story</button>
       <button id="finish-btn" class="btn hidden" onclick="goToStage('stage-5'); initQuestions()">Finish</button>
     </div>
   </div>
@@ -1016,7 +1076,7 @@
       </div>
 
       <div style="margin-top:16px;">
-        <button id="questions-continue" class="btn hidden" onclick="goToStage('stage-6'); initAnalysis()">Continue</button>
+        <button id="questions-continue" class="btn hidden" onclick="handleQuestionsComplete()">Continue</button>
       </div>
     </div>
   </div>
@@ -1605,6 +1665,42 @@ const loadingMsgs = [
 ];
 let loadingInt = null, loadingIdx = 0;
 let analysisTimerInt = null;
+
+async function savePartialRecord() {
+  try {
+    await fetch('/api/store', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        signal: appState.signal,
+        idea: appState.signal,
+        headline: appState.headline,
+        story: appState.story,
+        ideaType: appState.ideaType,
+        icp: appState.icp,
+        method: appState.method,
+        destination: appState.destination,
+        competition: appState.competition,
+        q1: appState.questions[0],
+        q2: appState.questions[1],
+        q3: appState.questions[2],
+        questions: appState.questions,
+        completionTime: appState.completionTime,
+        adminMode: appState.adminMode,
+        timestamp: new Date().toISOString(),
+        partial: true,
+      }),
+    });
+  } catch (e) {
+    // fire-and-forget — don't block on failure
+  }
+}
+
+async function handleQuestionsComplete() {
+  savePartialRecord(); // fire-and-forget
+  goToStage('stage-6');
+  initAnalysis();
+}
 
 async function initAnalysis() {
   // Show radar
@@ -2225,23 +2321,23 @@ function micButtonClick() {
 }
 
 function micShowTestPrompt(SR) {
-  const storyArea = document.getElementById('story-textarea').parentNode;
-  const existing  = document.getElementById('mic-test-prompt');
+  const existing = document.getElementById('mic-test-prompt');
   if (existing) existing.remove();
 
   const testPrompt = document.createElement('div');
   testPrompt.id = 'mic-test-prompt';
   testPrompt.innerHTML = `
-    <p class="mic-test-instruction">Say this to test your microphone:</p>
-    <p class="mic-test-sentence">"It is five years from now and my idea worked."</p>
-    <div class="mic-test-transcript" id="mic-test-output">Waiting for speech...</div>
-    <div class="mic-test-buttons">
-      <button id="mic-approve" disabled>Looks good — start recording</button>
-      <button id="mic-cancel">Cancel</button>
+    <div class="mic-test-inner">
+      <p class="mic-test-instruction">Say this to test your microphone:</p>
+      <p class="mic-test-sentence">"It is five years from now and my idea worked."</p>
+      <div class="mic-test-transcript" id="mic-test-output">Waiting for speech...</div>
+      <div class="mic-test-buttons">
+        <button id="mic-approve" disabled>Looks good — start recording</button>
+        <button id="mic-cancel">Cancel</button>
+      </div>
     </div>
   `;
-  storyArea.style.position = 'relative';
-  storyArea.appendChild(testPrompt);
+  document.body.appendChild(testPrompt);
 
   const testRec = new SR();
   testRec.continuous = true;
