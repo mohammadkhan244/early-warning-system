@@ -3,7 +3,12 @@ import Anthropic from "@anthropic-ai/sdk";
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { signal, headline, story, q1 = '', q2 = '', q3 = '' } = req.body;
+  const {
+    signal, headline, story,
+    ideaType = 'personal',
+    icp = '', method = '', destination = '', competition = '',
+    q1 = '', q2 = '', q3 = ''
+  } = req.body;
 
   if (!signal || !story) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -20,10 +25,15 @@ export default async function handler(req, res) {
       messages: [
         {
           role: "user",
-          content: `You are analyzing a future scenario written in a 15-minute free-write exercise by someone building their Early Warning System.
+          content: `You are analyzing a future scenario written as part of an idea stress test exercise.
 
-Signal they noticed: ${signal}
-Scenario headline: ${headline}
+Idea: ${signal}
+Headline: ${headline}
+Idea type: ${ideaType}${ideaType === 'business' ? `
+Customer (ICP): ${icp}
+How they find out: ${method}
+3-year destination: ${destination}
+Alternatives/competition: ${competition}` : ''}
 Their story: ${story}
 
 Analyze in exactly these labeled sections. Be specific to their actual words. Quote them back where relevant. Never be generic.

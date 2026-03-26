@@ -188,6 +188,23 @@
       margin: 0;
     }
 
+    /* ─── BRANCH STAGE ─── */
+    .branch-buttons {
+      display: flex;
+      gap: 16px;
+      margin-top: 40px;
+    }
+    .branch-buttons .btn {
+      flex: 1;
+      text-align: center;
+    }
+    @media (max-width: 600px) {
+      .branch-buttons { flex-direction: column; }
+    }
+
+    /* ─── BUSINESS CONTEXT STAGE ─── */
+    .biz-fields { display: flex; flex-direction: column; gap: 8px; }
+
     /* ─── STAGE 3.5: TIMER SELECT ─── */
     .timer-toggle {
       display: flex;
@@ -738,16 +755,16 @@
 ═══════════════════════════════════════════════ -->
 <div id="stage-1" class="stage">
   <div class="stage-content">
-    <h1>Experience the next 5 years before they actually happen.</h1>
-    <p class="subhead">Build your Early Warning System</p>
-    <p class="disclaimer">(This isn't about predicting the future. It's about preparing for it.)</p>
+    <h1>Stress Test Your Ideas Before They Break</h1>
+    <p class="subhead">A 30-minute exercise that finds the hidden assumptions in your idea — before you spend years acting on them.</p>
+    <p class="disclaimer">(This isn't about predicting failure. It's about finding the cracks before they cost you.)</p>
     <div class="body-copy">
-      <p>In 5 years, you'll know exactly how this plays out.</p>
-      <p>You'll know which signals you were already tracking but didn't act on. Which assumptions were quietly making decisions for you. Which direction you moved when the pressure arrived.</p>
-      <p>You'll know all of that.</p>
-      <p>The only question is whether you find out then — or now.</p>
+      <p>You have an idea. Maybe you've been sitting on it for months. Maybe you're about to commit to it. Maybe you just can't stop thinking about it.</p>
+      <p>The assumptions holding your idea up are invisible right now. You can't see them by thinking harder. You can't find them in a plan. But they'll surface in a story.</p>
+      <p>In the next 30 minutes you will find the hidden assumptions holding your idea up, see where your stated vision diverges from what your story actually revealed, and leave with three things to act on before you've committed to anything you can't undo.</p>
+      <p>Most people find out their assumptions were wrong after they've spent years acting on them. This is the alternative.</p>
     </div>
-    <button class="btn btn-primary" onclick="goToStage('stage-2')">Start the simulation</button>
+    <button class="btn btn-primary" onclick="goToStage('stage-2')">Start the stress test</button>
   </div>
 </div>
 
@@ -756,11 +773,11 @@
 ═══════════════════════════════════════════════ -->
 <div id="stage-2" class="stage">
   <div class="stage-content">
-    <h2>What's one thing you've noticed this week you can't stop thinking about?</h2>
-    <p class="stage-subtext">Not a headline. Not a macro trend. Something you saw, felt, or overheard. Something that felt slightly off, slightly new, or slightly more than it used to be.</p>
+    <h2>What's the idea you keep coming back to?</h2>
+    <p class="stage-subtext">Or the question you can't stop turning over. It doesn't have to be fully formed. It just has to be the thing that's been taking up space in your head.</p>
 
     <div class="fill-blank">
-      <span class="fill-blank-prefix">I noticed...</span>
+      <span class="fill-blank-prefix">My idea is...</span>
       <div class="fill-blank-input-wrapper">
         <div class="fill-blank-placeholder" id="signal-placeholder"></div>
         <textarea id="signal-input" rows="2"
@@ -779,11 +796,11 @@
 ═══════════════════════════════════════════════ -->
 <div id="stage-3" class="stage">
   <div class="stage-content">
-    <h2>Give your future a name.</h2>
-    <p class="stage-subtext">3 to 5 words. Something you could say to yourself in three years — "oh, we're moving toward ___" — and know exactly what it means.</p>
+    <h2>Give what you built a name.</h2>
+    <p class="stage-subtext">Three to five words. A shorthand for the version of the idea your story actually described — which may or may not be what you thought you were building.</p>
 
     <div class="fill-blank" style="align-items:center;">
-      <span class="fill-blank-prefix">I call this future...</span>
+      <span class="fill-blank-prefix">I call this...</span>
       <div class="fill-blank-input-wrapper">
         <div class="fill-blank-placeholder" id="headline-placeholder"></div>
         <input type="text" id="headline-input" style="min-height:0;padding:12px 16px;"
@@ -793,7 +810,60 @@
       </div>
     </div>
 
-    <button id="headline-continue" class="btn" disabled onclick="goToStage('stage-3-5')">Choose your writing time</button>
+    <button id="headline-continue" class="btn" disabled onclick="goToStage('stage-branch')">Choose your writing time</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     STAGE BRANCH: PERSONAL / BUSINESS
+═══════════════════════════════════════════════ -->
+<div id="stage-branch" class="stage">
+  <div class="stage-content">
+    <h2>One question before you write.</h2>
+    <p class="stage-subtext">Your answer changes what the story needs to surface — and what the analysis looks for afterward.</p>
+    <div class="branch-buttons">
+      <button class="btn btn-primary" onclick="selectBranch('business')">This is a business idea</button>
+      <button class="btn btn-primary" onclick="selectBranch('personal')">This is a personal project</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     STAGE BIZ: BUSINESS CONTEXT
+═══════════════════════════════════════════════ -->
+<div id="stage-biz" class="stage">
+  <div class="stage-content">
+    <h2>Tell me a little more about the idea.</h2>
+    <p class="stage-subtext">This shapes the story prompt and sharpens the analysis.</p>
+
+    <div class="biz-fields">
+      <div class="fill-blank">
+        <span class="fill-blank-prefix">My customer is...</span>
+        <div class="fill-blank-input-wrapper">
+          <textarea id="icp-input" rows="2" oninput="onBizInput()" placeholder="someone who..."></textarea>
+        </div>
+      </div>
+      <div class="fill-blank">
+        <span class="fill-blank-prefix">They find out about us by...</span>
+        <div class="fill-blank-input-wrapper">
+          <textarea id="method-input" rows="2" oninput="onBizInput()" placeholder="searching for..."></textarea>
+        </div>
+      </div>
+      <div class="fill-blank">
+        <span class="fill-blank-prefix">In 3 years, we've...</span>
+        <div class="fill-blank-input-wrapper">
+          <textarea id="destination-input" rows="2" oninput="onBizInput()" placeholder="become the..."></textarea>
+        </div>
+      </div>
+      <div class="fill-blank">
+        <span class="fill-blank-prefix">Instead of this, they'd...</span>
+        <div class="fill-blank-input-wrapper">
+          <textarea id="competition-input" rows="2" oninput="onBizInput()" placeholder="probably just..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <button id="biz-continue" class="btn" disabled onclick="goToStage('stage-3-5')" style="margin-top:24px;">Continue</button>
   </div>
 </div>
 
@@ -818,7 +888,7 @@
 <div id="stage-4" class="stage">
   <div class="story-container">
     <div class="story-context-bar">
-      <span><strong>Signal:</strong> <span id="context-signal"></span></span>
+      <span><strong>Idea:</strong> <span id="context-signal"></span></span>
       <span><strong>Future:</strong> <span id="context-headline"></span></span>
     </div>
     <div class="story-timer" id="story-timer"></div>
@@ -957,12 +1027,12 @@
 ═══════════════════════════════════════════════ -->
 <div id="stage-7" class="stage">
   <div class="stage-content">
-    <div class="reveal-line" id="reveal-1">You simulated a future.</div>
-    <div class="reveal-line" id="reveal-2">You simulated how you acted inside it.</div>
-    <div class="reveal-line" id="reveal-3">You felt the emotions of it before it arrived.</div>
-    <p class="reveal-paragraph" id="reveal-para">Most people find out how they respond to a future when the future arrives. You just practiced before it did. That's the Early Warning System.</p>
+    <div class="reveal-line" id="reveal-1">You found what your idea is actually built on.</div>
+    <div class="reveal-line" id="reveal-2">You found where your stated vision and your real vision diverge.</div>
+    <div class="reveal-line" id="reveal-3">You found what you hadn't let yourself think about yet.</div>
+    <p class="reveal-paragraph" id="reveal-para">Most people find out their assumptions were wrong after they've spent years acting on them. You just found it before.</p>
     <div class="reveal-btn" id="reveal-btn">
-      <button class="btn btn-primary" onclick="goToStage('stage-8')">Get your report</button>
+      <button class="btn btn-primary" onclick="goToStage('stage-8')">Get your stress test report</button>
     </div>
   </div>
 </div>
@@ -972,11 +1042,11 @@
 ═══════════════════════════════════════════════ -->
 <div id="stage-8" class="stage">
   <div class="stage-content">
-    <h2>Your Early Warning System report is ready.</h2>
-    <p class="stage-subtext">Your signal. Your story. Your analysis. Your one action. All in one document.</p>
+    <h2>Your stress test report is ready.</h2>
+    <p class="stage-subtext">Your idea. Your story. Your assumptions. Your signals. Your three actions. All in one document.</p>
 
     <div class="email-wrapper">
-      <div class="email-label">Where should we send it?</div>
+      <div class="email-label">Where should we send your report?</div>
       <input type="email" id="email-input" placeholder="your@email.com" oninput="appState.email = this.value">
     </div>
 
@@ -986,7 +1056,7 @@
     <hr class="cta-divider">
 
     <p class="session-heading">Want to go deeper?</p>
-    <p class="session-copy">You just found something you didn't plan to find. The session is where we go deeper into what your story actually revealed — and what to do about it.</p>
+    <p class="session-copy">You just found the cracks. The session is where we figure out which ones matter — and what to do about them before they cost you.</p>
     <a href="[BOOKING_URL]" class="btn btn-primary">Book a session — $500</a>
 
     <hr class="cta-divider" style="margin-top:52px;">
@@ -1028,7 +1098,12 @@ const appState = {
   email: '',
   completionTime: null,
   currentStage: 'stage-1',
-  adminMode: false
+  adminMode: false,
+  ideaType: '',
+  icp: '',
+  method: '',
+  destination: '',
+  competition: ''
 };
 
 // ─── ADMIN DETECTION ─────────────────────────────
@@ -1038,7 +1113,7 @@ if (appState.adminMode) {
 }
 
 // ─── STAGE ORDER ─────────────────────────────────
-const STAGES = ['stage-1','stage-2','stage-3','stage-3-5','stage-4','stage-5','stage-6','stage-7','stage-8'];
+const STAGES = ['stage-1','stage-2','stage-3','stage-branch','stage-biz','stage-3-5','stage-4','stage-5','stage-6','stage-7','stage-8'];
 
 // ─── NAVIGATION ──────────────────────────────────
 function goToStage(id) {
@@ -1111,6 +1186,7 @@ function adminSkipAnalysis() {
 }
 
 function adminPrefill() {
+  appState.ideaType = appState.ideaType || 'personal';
   appState.signal  = "I noticed fewer people in my building's lobby every morning this week.";
   appState.story   = `It's Tuesday, seven years from now, and I'm working from the corner of my bedroom — the standing desk I bought during the first wave of all this. The lobby thing I noticed turned out to be a leading indicator; within eighteen months, our entire floor was gone. Not the company, just the floor.
 
@@ -1220,6 +1296,34 @@ function onHeadlineInput() {
 }
 
 
+// ─── BRANCH ──────────────────────────────────────
+function selectBranch(type) {
+  appState.ideaType = type;
+  if (type === 'business') {
+    goToStage('stage-biz');
+  } else {
+    goToStage('stage-3-5');
+  }
+}
+
+function onBizInput() {
+  appState.icp         = document.getElementById('icp-input').value;
+  appState.method      = document.getElementById('method-input').value;
+  appState.destination = document.getElementById('destination-input').value;
+  appState.competition = document.getElementById('competition-input').value;
+  const btn = document.getElementById('biz-continue');
+  if (appState.adminMode) {
+    btn.disabled = false;
+  } else {
+    btn.disabled = !(
+      appState.icp.length > 10 &&
+      appState.method.length > 10 &&
+      appState.destination.length > 10 &&
+      appState.competition.length > 10
+    );
+  }
+}
+
 // ─── TIMER SELECT ────────────────────────────────
 function selectTimer(mins, el) {
   document.querySelectorAll('.timer-option').forEach(o => o.classList.remove('selected'));
@@ -1238,15 +1342,20 @@ let storyLastKey   = null;
 let nudgeTimeouts  = [];
 
 function initStory() {
-  document.getElementById('context-signal').textContent   = appState.signal   || '(your signal)';
-  document.getElementById('context-headline').textContent = appState.headline || '(your future)';
+  document.getElementById('context-signal').textContent   = appState.signal   || '(your idea)';
+  document.getElementById('context-headline').textContent = appState.headline || '(your name)';
 
   const dur = appState.timerDuration;
   document.getElementById('story-timer').textContent = dur + ':00';
 
-  const headline = appState.headline || 'your future';
-  document.getElementById('story-instruction-text').textContent =
-    `It is 15 years from now. ${headline} is standard reality. Everyone lives around it.\n\nWalk through your Tuesday. First person. Present tense. As if you're living it right now.\n\nMorning. Work. Evening. What's different? What's harder? What surprised you about how life actually turned out?\n\nDon't think. Don't edit. Just write.`;
+  const headline = appState.headline || 'your idea';
+  let instruction;
+  if (appState.ideaType === 'business') {
+    instruction = `It is 5 years from now. ${headline} worked. You built it.\n\nWalk through a Tuesday. First person. Present tense. As if you're living it right now.\n\nMorning. Work. An interaction with a customer. An interaction with a collaborator or critic. Evening. What does your day look like? What's harder than you thought? What did you get wrong? What surprised you about how it actually turned out?\n\nDon't think. Don't edit. Just write.`;
+  } else {
+    instruction = `It is 5 years from now. ${headline} is your reality. You built this.\n\nWalk through a Tuesday. First person. Present tense. As if you're living it right now.\n\nMorning. Work. Evening. What does your day look like? What's different from what you expected? What did you have to let go of to get here? What surprised you?\n\nDon't think. Don't edit. Just write.`;
+  }
+  document.getElementById('story-instruction-text').textContent = instruction;
 
   // Reset timer vars
   storyStarted = false;
@@ -1445,12 +1554,17 @@ async function initAnalysis() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        signal:   appState.signal,
-        headline: appState.headline,
-        story:    appState.story,
-        q1:       appState.questions[0] || '',
-        q2:       appState.questions[1] || '',
-        q3:       appState.questions[2] || ''
+        signal:      appState.signal,
+        headline:    appState.headline,
+        story:       appState.story,
+        ideaType:    appState.ideaType,
+        icp:         appState.icp         || '',
+        method:      appState.method      || '',
+        destination: appState.destination || '',
+        competition: appState.competition || '',
+        q1:          appState.questions[0] || '',
+        q2:          appState.questions[1] || '',
+        q3:          appState.questions[2] || ''
       })
     });
 
@@ -1910,6 +2024,11 @@ function restartApp() {
   appState.analysisRaw = '';
   appState.email = '';
   appState.completionTime = null;
+  appState.ideaType = '';
+  appState.icp = '';
+  appState.method = '';
+  appState.destination = '';
+  appState.competition = '';
 
   // Reset story timer vars
   clearInterval(storyTimerInt);
@@ -1928,6 +2047,7 @@ function restartApp() {
     .forEach(el => el.value = '');
   document.getElementById('signal-continue').disabled  = !adminMode;
   document.getElementById('headline-continue').disabled = !adminMode;
+  document.getElementById('biz-continue').disabled = !adminMode;
   document.getElementById('cta-confirmation').style.display = 'none';
 
   // Reset timer toggle
@@ -2003,6 +2123,7 @@ document.querySelectorAll('.stage').forEach(s => {
     setTimeout(() => {
       document.getElementById('signal-continue').disabled  = false;
       document.getElementById('headline-continue').disabled = false;
+      document.getElementById('biz-continue').disabled = false;
     }, 0);
   }
 })();
