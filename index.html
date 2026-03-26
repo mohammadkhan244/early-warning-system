@@ -729,6 +729,83 @@
     /* ─── UTILITIES ─── */
     .hidden { display: none !important; }
 
+    /* ─── MIC BUTTON ─── */
+    #mic-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: 1px solid #b87333;
+      color: #b87333;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: all 0.2s;
+    }
+    #mic-button:hover { background: rgba(184,115,51,0.1); }
+    #mic-button.listening { border-color: #cc3333; color: #cc3333; }
+    .mic-pulse {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #cc3333;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(1.3); }
+    }
+    #mic-test-prompt {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 0; right: 0;
+      background: #1a1a1a;
+      border: 1px solid #b87333;
+      border-radius: 6px;
+      padding: 20px;
+      z-index: 10;
+    }
+    .mic-test-instruction {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(240,236,228,0.5);
+      margin-bottom: 8px;
+    }
+    .mic-test-sentence {
+      font-size: 16px;
+      color: #f0ece4;
+      font-style: italic;
+      margin-bottom: 16px;
+    }
+    .mic-test-transcript {
+      font-size: 13px;
+      color: #b87333;
+      min-height: 24px;
+      margin-bottom: 16px;
+      font-style: italic;
+    }
+    .mic-test-buttons { display: flex; gap: 8px; }
+    .mic-test-buttons button:first-child { flex: 1; }
+    .mic-test-buttons button:last-child {
+      background: transparent;
+      border: 1px solid rgba(240,236,228,0.2);
+      color: rgba(240,236,228,0.5);
+      padding: 10px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    @media (max-width: 600px) {
+      .mic-test-buttons { flex-direction: column; }
+      #mic-test-prompt {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        border-radius: 12px 12px 0 0;
+      }
+    }
+
     /* ─── RESPONSIVE ─── */
     @media (max-width: 700px) {
       .story-context-bar { padding: 12px 24px; gap: 12px; }
@@ -903,6 +980,7 @@
     <div class="story-nudge" id="story-nudge"></div>
     <div class="story-bottom-bar">
       <span class="word-count" id="word-count">0 words</span>
+      <button id="mic-button" onclick="micButtonClick()">🎤 Speak your story</button>
       <button id="finish-btn" class="btn hidden" onclick="goToStage('stage-5'); initQuestions()">Finish</button>
     </div>
   </div>
@@ -1357,6 +1435,9 @@ function initStory() {
   }
   document.getElementById('story-instruction-text').textContent = instruction;
 
+  // Init voice-to-text (hides button if unsupported)
+  initVoiceToText();
+
   // Reset timer vars
   storyStarted = false;
   storyPaused  = false;
@@ -1743,29 +1824,48 @@ async function handleReport() {
   // Show confirmation
   document.getElementById('cta-confirmation').style.display = 'block';
 
-  // Store to Airtable (best-effort)
-  try {
-    if (appState.adminMode) document.getElementById('adm-airtable').textContent = 'Writing...';
-    await fetch('/api/store', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        signal:         appState.signal,
-        headline:       appState.headline,
-        story:          appState.story,
-        questions:      appState.questions,
-        analysis:       appState.analysisRaw,
-        email:          appState.email,
-        completionTime: appState.completionTime,
-        timestamp:      new Date().toISOString(),
-        adminMode:      appState.adminMode
-      })
-    });
-    if (appState.adminMode) document.getElementById('adm-airtable').textContent = 'OK';
-  } catch (err) {
+  // Store to Airtable — always fires, no conditions
+  if (appState.adminMode) document.getElementById('adm-airtable').textContent = 'Writing...';
+  console.log('Sending to Airtable:', {
+    idea: appState.signal,
+    headline: appState.headline,
+    storyLength: appState.story && appState.story.length,
+    email: appState.email,
+    ideaType: appState.ideaType
+  });
+  fetch('/api/store', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      signal:         appState.signal,
+      idea:           appState.signal,
+      headline:       appState.headline,
+      story:          appState.story,
+      ideaType:       appState.ideaType,
+      icp:            appState.icp,
+      method:         appState.method,
+      destination:    appState.destination,
+      competition:    appState.competition,
+      q1:             appState.questions[0] || '',
+      q2:             appState.questions[1] || '',
+      q3:             appState.questions[2] || '',
+      questions:      appState.questions,
+      analysis:       appState.analysisRaw,
+      email:          appState.email,
+      completionTime: appState.completionTime,
+      timestamp:      new Date().toISOString(),
+      adminMode:      appState.adminMode
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    console.log('Airtable store result:', d);
+    if (appState.adminMode) document.getElementById('adm-airtable').textContent = d.success ? 'OK' : 'Error';
+  })
+  .catch(err => {
     console.error('Store error:', err);
     if (appState.adminMode) document.getElementById('adm-airtable').textContent = 'Error';
-  }
+  });
 }
 
 
@@ -2030,6 +2130,12 @@ function restartApp() {
   appState.destination = '';
   appState.competition = '';
 
+  // Reset mic state
+  micStopListening();
+  const tp = document.getElementById('mic-test-prompt');
+  if (tp) tp.remove();
+  _micFinal = '';
+
   // Reset story timer vars
   clearInterval(storyTimerInt);
   storyStarted = false;
@@ -2090,6 +2196,139 @@ function restartApp() {
   const s1 = document.getElementById('stage-1');
   s1.classList.add('active');
   window.scrollTo(0, 0);
+}
+
+// ─── VOICE TO TEXT ───────────────────────────────
+let _micRecognition = null;
+let _micListening   = false;
+let _micFinal       = '';
+
+function initVoiceToText() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    const btn = document.getElementById('mic-button');
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  // Ready — button click handler already wired via micButtonClick()
+}
+
+function micButtonClick() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+
+  if (_micListening) {
+    micStopListening();
+  } else {
+    micShowTestPrompt(SR);
+  }
+}
+
+function micShowTestPrompt(SR) {
+  const storyArea = document.getElementById('story-textarea').parentNode;
+  const existing  = document.getElementById('mic-test-prompt');
+  if (existing) existing.remove();
+
+  const testPrompt = document.createElement('div');
+  testPrompt.id = 'mic-test-prompt';
+  testPrompt.innerHTML = `
+    <p class="mic-test-instruction">Say this to test your microphone:</p>
+    <p class="mic-test-sentence">"It is five years from now and my idea worked."</p>
+    <div class="mic-test-transcript" id="mic-test-output">Waiting for speech...</div>
+    <div class="mic-test-buttons">
+      <button id="mic-approve" disabled>Looks good — start recording</button>
+      <button id="mic-cancel">Cancel</button>
+    </div>
+  `;
+  storyArea.style.position = 'relative';
+  storyArea.appendChild(testPrompt);
+
+  const testRec = new SR();
+  testRec.continuous = true;
+  testRec.interimResults = true;
+  testRec.lang = 'en-US';
+
+  testRec.onresult = (e) => {
+    let out = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      out += e.results[i][0].transcript;
+    }
+    const el = document.getElementById('mic-test-output');
+    if (el) {
+      el.textContent = out || 'Listening...';
+      if (out.trim().length > 3) {
+        const a = document.getElementById('mic-approve');
+        if (a) a.disabled = false;
+      }
+    }
+  };
+  testRec.onerror = (e) => {
+    const el = document.getElementById('mic-test-output');
+    if (el) el.textContent = 'Microphone error: ' + e.error;
+  };
+  testRec.start();
+
+  document.getElementById('mic-cancel').addEventListener('click', () => {
+    testRec.stop(); testPrompt.remove();
+  });
+  document.getElementById('mic-approve').addEventListener('click', () => {
+    testRec.stop(); testPrompt.remove();
+    micStartListening(SR);
+  });
+}
+
+function micStartListening(SR) {
+  _micListening = true;
+  _micFinal = document.getElementById('story-textarea').value;
+
+  const btn = document.getElementById('mic-button');
+  btn.classList.add('listening');
+  btn.innerHTML = '<span class="mic-pulse"></span> Stop recording';
+
+  _micRecognition = new SR();
+  _micRecognition.continuous = true;
+  _micRecognition.interimResults = true;
+  _micRecognition.lang = 'en-US';
+
+  _micRecognition.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        _micFinal += e.results[i][0].transcript + ' ';
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    const ta = document.getElementById('story-textarea');
+    ta.value = _micFinal + interim;
+    ta.dispatchEvent(new Event('input'));
+    // Start story timer on first speech
+    if (!storyStarted && _micFinal.trim().length > 0) {
+      onStoryKeydown();
+    }
+  };
+  _micRecognition.onend = () => {
+    if (_micListening) _micRecognition.start(); // auto-restart
+  };
+  _micRecognition.onerror = (e) => {
+    if (e.error === 'no-speech') return;
+    console.error('Speech error:', e.error);
+    micStopListening();
+  };
+  _micRecognition.start();
+}
+
+function micStopListening() {
+  _micListening = false;
+  if (_micRecognition) { _micRecognition.stop(); _micRecognition = null; }
+
+  const btn = document.getElementById('mic-button');
+  btn.classList.remove('listening');
+  btn.innerHTML = '🎤 Speak your story';
+
+  const ta = document.getElementById('story-textarea');
+  ta.value = _micFinal;
+  ta.dispatchEvent(new Event('input'));
 }
 
 // ─── UTILITY ─────────────────────────────────────

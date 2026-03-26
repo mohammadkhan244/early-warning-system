@@ -1,37 +1,65 @@
-import Airtable from "airtable";
-
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).end();
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-  const {
-    signal,
-    headline,
-    story,
-    questions,
-    analysis,
-    email,
-    completionTime,
-    timestamp,
-    adminMode,
-  } = req.body;
+  if (!process.env.AIRTABLE_API_KEY || !process.env.AIRTABLE_BASE_ID) {
+    console.error("Missing Airtable env vars");
+    return res.status(500).json({ error: "Airtable not configured" });
+  }
 
-  const base = new Airtable({
-    apiKey: process.env.AIRTABLE_API_KEY,
-  }).base(process.env.AIRTABLE_BASE_ID);
+  try {
+    const body = req.body;
+    console.log("Storing record:", JSON.stringify(body, null, 2));
 
-  await base("Responses").create({
-    Signal: signal || "",
-    Headline: headline || "",
-    Story: story || "",
-    Q1: (questions && questions[0]) || "",
-    Q2: (questions && questions[1]) || "",
-    Q3: (questions && questions[2]) || "",
-    Analysis: analysis || "",
-    Email: email || "",
-    CompletionTime: completionTime || 0,
-    Timestamp: timestamp || new Date().toISOString(),
-    AdminMode: adminMode || false,
-  });
+    const response = await fetch(
+      `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/Responses`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fields: {
+            Idea: String(body.idea || body.signal || ""),
+            Headline: String(body.headline || ""),
+            Story: String(body.story || ""),
+            IdeaType: String(body.ideaType || ""),
+            ICP: String(body.icp || ""),
+            Method: String(body.method || ""),
+            Destination: String(body.destination || ""),
+            Competition: String(body.competition || ""),
+            Q1_Who: String(body.q1 || (body.questions && body.questions[0]) || ""),
+            Q2_Assumptions: String(body.q2 || (body.questions && body.questions[1]) || ""),
+            Q3_Absent: String(body.q3 || (body.questions && body.questions[2]) || ""),
+            Analysis_Full: String(body.analysis || ""),
+            Email: String(body.email || ""),
+            Completion_Time_Mins: Number(body.completionTime) || 0,
+            Admin_Mode: Boolean(body.adminMode),
+            Timestamp: body.timestamp || new Date().toISOString(),
+          },
+        }),
+      }
+    );
 
-  res.json({ success: true });
+    const data = await response.json();
+    console.log("Airtable response:", response.status, JSON.stringify(data));
+
+    if (!response.ok) {
+      console.error("Airtable write failed:", data);
+      return res.status(500).json({
+        error: "Airtable write failed",
+        details: data,
+      });
+    }
+
+    return res.json({ success: true, id: data.id });
+  } catch (err) {
+    console.error("Store handler exception:", err);
+    return res.status(500).json({
+      error: "Internal error",
+      message: err.message,
+    });
+  }
 }
