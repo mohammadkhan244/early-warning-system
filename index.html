@@ -1672,39 +1672,40 @@ let analysisTimerInt = null;
 async function savePartialRecord() {
   const state = appState;
   console.log("=== PARTIAL SAVE TO SHEETS ===");
-  try {
-    const response = await fetch(SHEETS_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        timestamp: new Date().toISOString(),
-        idea: state.idea || state.signal || "",
-        headline: state.headline || "",
-        story: state.story || "",
-        ideaType: state.ideaType || "",
-        icp: state.icp || "",
-        method: state.method || "",
-        destination: state.destination || "",
-        competition: state.competition || "",
-        q1: state.questions?.[0] || "",
-        q2: state.questions?.[1] || "",
-        q3: state.questions?.[2] || "",
-        analysis: state.analysis || "",
-        email: state.email || "",
-        completionTime: state.elapsedTime || 0,
-        adminMode: state.adminMode || false,
-        partial: true
-      })
-    });
-    const data = await response.json();
-    console.log("=== SHEETS PARTIAL RESPONSE ===", data);
+  fetch(SHEETS_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      timestamp: new Date().toISOString(),
+      idea: state.idea || state.signal || "",
+      headline: state.headline || "",
+      story: state.story || "",
+      ideaType: state.ideaType || "",
+      icp: state.icp || "",
+      method: state.method || "",
+      destination: state.destination || "",
+      competition: state.competition || "",
+      q1: state.questions?.[0] || "",
+      q2: state.questions?.[1] || "",
+      q3: state.questions?.[2] || "",
+      analysis: state.analysis || "",
+      email: state.email || "",
+      completionTime: state.elapsedTime || 0,
+      adminMode: state.adminMode || false,
+      partial: true
+    })
+  })
+  .then(() => {
+    console.log("=== SHEETS SAVE SENT (no-cors) ===");
     const el = document.getElementById('admin-airtable');
-    if (el) el.textContent = data.success ? 'OK (partial)' : 'FAILED';
-  } catch(err) {
-    console.error("=== SHEETS PARTIAL FAILED ===", err);
+    if (el) el.textContent = 'SENT';
+  })
+  .catch(err => {
+    console.error("=== SHEETS FAILED ===", err);
     const el = document.getElementById('admin-airtable');
     if (el) el.textContent = 'FAILED';
-  }
+  });
 }
 
 async function handleQuestionsComplete() {
@@ -1936,6 +1937,7 @@ async function handleReport() {
   console.log("=== FULL SAVE TO SHEETS ===");
   fetch(SHEETS_URL, {
     method: "POST",
+    mode: "no-cors",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       timestamp: new Date().toISOString(),
@@ -1957,14 +1959,13 @@ async function handleReport() {
       partial: false
     })
   })
-  .then(r => r.json())
-  .then(data => {
-    console.log("=== SHEETS FULL RESPONSE ===", data);
+  .then(() => {
+    console.log("=== SHEETS SAVE SENT (no-cors) ===");
     const el = document.getElementById('admin-airtable');
-    if (el) el.textContent = data.success ? 'OK' : 'FAILED';
+    if (el) el.textContent = 'SENT';
   })
   .catch(err => {
-    console.error("=== SHEETS FULL FAILED ===", err);
+    console.error("=== SHEETS FAILED ===", err);
     const el = document.getElementById('admin-airtable');
     if (el) el.textContent = 'FAILED';
   });
