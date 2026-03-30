@@ -74,7 +74,7 @@
     }
     .stage-subtext {
       font-size: 0.9rem;
-      color: #6a6a62;
+      color: rgba(240, 236, 228, 0.65);
       margin-bottom: 36px;
       line-height: 1.7;
     }
@@ -203,7 +203,7 @@
     }
     .intro-disclaimer {
       font-size: clamp(11px, 1.5vw, 13px);
-      color: rgba(240,236,228,0.4);
+      color: rgba(240, 236, 228, 0.65);
       font-style: italic;
       margin: 0;
     }
@@ -235,7 +235,21 @@
     }
 
     /* ─── BUSINESS CONTEXT STAGE ─── */
-    .biz-fields { display: flex; flex-direction: column; gap: 8px; }
+    .biz-fields { display: flex; flex-direction: column; gap: 20px; }
+    .biz-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #f0ece4;
+      margin-bottom: 4px;
+      letter-spacing: 0.02em;
+    }
+    .biz-helper {
+      font-size: 0.8rem;
+      color: rgba(240, 236, 228, 0.65);
+      margin-bottom: 8px;
+      line-height: 1.55;
+    }
 
     /* ─── STAGE 3.5: TIMER SELECT ─── */
     .timer-toggle {
@@ -261,7 +275,7 @@
     .timer-option:hover:not(:disabled) { background-color: #7a4a22; color: #ffffff; }
     .timer-note {
       font-size: 0.83rem;
-      color: #3a3a34;
+      color: rgba(240, 236, 228, 0.65);
       margin-bottom: 44px;
       font-style: italic;
     }
@@ -419,7 +433,7 @@
     }
     .question-helper {
       font-size: 0.82rem;
-      color: #4a4a42;
+      color: rgba(240, 236, 228, 0.65);
       font-style: italic;
       margin-bottom: 14px;
       line-height: 1.65;
@@ -969,29 +983,37 @@
 <div id="stage-biz" class="stage">
   <div class="stage-content">
     <h2>Tell me a little more about the idea.</h2>
-    <p class="stage-subtext">This shapes the story prompt and sharpens the analysis.</p>
+    <p class="stage-subtext">These four questions shape the story prompt and sharpen the analysis. Answer based on what you planned — not what the story shows.</p>
 
     <div class="biz-fields">
       <div class="fill-blank">
+        <label class="biz-label">Who specifically is this for?</label>
+        <p class="biz-helper">The person who needs this most — their job, situation, and what they're struggling with.</p>
         <span class="fill-blank-prefix">My customer is...</span>
         <div class="fill-blank-input-wrapper">
           <textarea id="icp-input" rows="2" oninput="onBizInput()" placeholder="someone who..."></textarea>
         </div>
       </div>
       <div class="fill-blank">
-        <span class="fill-blank-prefix">They find out about us by...</span>
+        <label class="biz-label">How does someone discover this?</label>
+        <p class="biz-helper">Word of mouth? A post they read? A problem they Google? How does the right person find their way to you?</p>
+        <span class="fill-blank-prefix">They find out by...</span>
         <div class="fill-blank-input-wrapper">
           <textarea id="method-input" rows="2" oninput="onBizInput()" placeholder="searching for..."></textarea>
         </div>
       </div>
       <div class="fill-blank">
-        <span class="fill-blank-prefix">In 3 years, we've...</span>
+        <label class="biz-label">What does success look like for your customer?</label>
+        <p class="biz-helper">Not for you — for them. What's different about their life or work after they've worked with you?</p>
+        <span class="fill-blank-prefix">After working with me, they...</span>
         <div class="fill-blank-input-wrapper">
           <textarea id="destination-input" rows="2" oninput="onBizInput()" placeholder="become the..."></textarea>
         </div>
       </div>
       <div class="fill-blank">
-        <span class="fill-blank-prefix">Instead of this, they'd...</span>
+        <label class="biz-label">What would they do if this didn't exist?</label>
+        <p class="biz-helper">The alternative they'd settle for — another tool, another person, doing nothing, figuring it out alone.</p>
+        <span class="fill-blank-prefix">Without this, they'd...</span>
         <div class="fill-blank-input-wrapper">
           <textarea id="competition-input" rows="2" oninput="onBizInput()" placeholder="probably just..."></textarea>
         </div>
