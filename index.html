@@ -237,62 +237,73 @@
     /* ─── BUSINESS CONTEXT STAGE ─── */
     #stage-biz {
       justify-content: flex-start;
-      padding-top: 48px;
+      padding: 48px 24px 80px;
       overflow-y: auto;
+      align-items: center;
     }
     #stage-biz .stage-content {
       text-align: left;
+      max-width: 560px;
+      width: 100%;
+      margin: 0 auto;
+      gap: 20px;
     }
     .biz-fields {
       display: flex;
       flex-direction: column;
-      gap: 28px;
+      gap: 24px;
       width: 100%;
     }
     .biz-field {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
       width: 100%;
     }
     .biz-label {
-      font-size: clamp(15px, 2vw, 17px);
+      font-size: clamp(14px, 1.8vw, 16px);
       font-weight: 600;
       color: #f0ece4;
       font-family: Georgia, serif;
     }
     .biz-helper {
-      font-size: clamp(12px, 1.5vw, 14px);
-      color: rgba(240, 236, 228, 0.65);
+      font-size: clamp(11px, 1.4vw, 13px);
+      color: rgba(240, 236, 228, 0.55);
       line-height: 1.5;
-      margin: 0;
+      margin: 0 0 6px 0;
     }
     .biz-input {
       width: 100%;
-      background: rgba(240, 236, 228, 0.05);
-      border: 1px solid rgba(240, 236, 228, 0.15);
+      background: rgba(240, 236, 228, 0.04);
+      border: 1px solid rgba(240, 236, 228, 0.12);
       border-radius: 4px;
       color: #f0ece4;
-      font-size: clamp(13px, 1.6vw, 15px);
+      font-size: clamp(13px, 1.5vw, 14px);
       font-family: Georgia, serif;
-      padding: 12px 14px;
+      padding: 10px 12px;
       resize: vertical;
-      min-height: 72px;
+      min-height: 64px;
       line-height: 1.6;
       transition: border-color 0.2s;
-      caret-color: #f0ece4;
+      box-sizing: border-box;
     }
     .biz-input:focus {
       outline: none;
-      border-color: rgba(240, 236, 228, 0.4);
+      border-color: rgba(240, 236, 228, 0.35);
     }
     .biz-input::placeholder {
-      color: rgba(240, 236, 228, 0.25);
+      color: rgba(240, 236, 228, 0.22);
+    }
+    #stage-biz button {
+      width: 100%;
+      max-width: 560px;
+      margin: 0 auto;
     }
     @media (max-width: 600px) {
-      #stage-biz { padding-top: 32px; }
-      .biz-fields { gap: 24px; }
-      .biz-input { min-height: 80px; }
+      #stage-biz { padding: 32px 20px 80px; }
+      .biz-label { font-size: 14px; }
+      .biz-helper { font-size: 12px; }
+      .biz-input { font-size: 14px; min-height: 72px; }
     }
 
     /* ─── STAGE 3.5: TIMER SELECT ─── */
