@@ -31,7 +31,7 @@ export default async function handler(req, res) {
              max-width:600px; margin:0 auto; padding:40px 24px;">
 
   <h1 style="color:#b87333; font-size:24px; margin-bottom:8px;">
-    Stress Test Your Ideas Before They Break
+    10-Minute Clarity Sprint
   </h1>
 
   <p style="color:rgba(240,236,228,0.6); font-size:14px; margin-bottom:32px;">
@@ -125,7 +125,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         from: 'onboarding@resend.dev',
         to: email,
-        subject: `[EWS] Here's your Report + more info`,
+        subject: `[Clarity Sprint] Here's what your story revealed`,
         html: emailHtml
       })
     });
