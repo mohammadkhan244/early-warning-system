@@ -1304,6 +1304,7 @@
   <div class="admin-actions" id="adm-actions">
     <button class="admin-btn" onclick="adminSkip()">Skip to next stage →</button>
   </div>
+  <button onclick="testAnalyzeEndpoint()" style="margin-top:4px;font-size:10px;padding:4px 8px;background:rgba(184,115,51,0.2);border:1px solid #b87333;color:#b87333;border-radius:3px;cursor:pointer;width:100%;">Test API →</button>
 </div>
 
 
@@ -1408,6 +1409,55 @@ function adminSkipTimer() {
   storyElapsed = appState.timerDuration * 60;
   document.getElementById('finish-btn').classList.remove('hidden');
   updateTimerDisplay();
+}
+
+async function testAnalyzeEndpoint() {
+  console.log("=== TESTING /api/analyze ===");
+  const apiEl = document.getElementById('adm-api');
+  if (apiEl) apiEl.textContent = 'Testing...';
+
+  try {
+    const r = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idea: "test idea for admin check",
+        headline: "Test Headline",
+        story: "It is five years from now and my test idea worked. I am sitting at my desk feeling good about things. The work is going well and I have clients who appreciate what I do.",
+        ideaType: "personal",
+        icp: "", method: "", destination: "", competition: "",
+        q1: "just me", q2: "things stayed the same", q3: "money"
+      })
+    });
+
+    const data = await r.json();
+    console.log("Test result:", r.status, data);
+
+    if (apiEl) {
+      if (data.success) {
+        apiEl.textContent = `OK (${data.analysis?.length} chars)`;
+        apiEl.style.color = '#4a9b6f';
+      } else {
+        apiEl.textContent = `FAIL: ${data.error}`;
+        apiEl.style.color = '#cc3333';
+      }
+    }
+
+    const adminOverlay = document.getElementById('admin-overlay');
+    if (adminOverlay) {
+      let detail = adminOverlay.querySelector('#admin-error-detail');
+      if (!detail) {
+        detail = document.createElement('div');
+        detail.id = 'admin-error-detail';
+        detail.style.cssText = 'margin-top:8px;padding:8px;font-size:10px;color:#f0ece4;word-break:break-word;max-width:280px;background:rgba(255,255,255,0.05);border-radius:4px;';
+        adminOverlay.appendChild(detail);
+      }
+      detail.textContent = JSON.stringify(data, null, 2).slice(0, 400);
+    }
+  } catch(err) {
+    console.error("Test fetch failed:", err);
+    if (apiEl) { apiEl.textContent = `FETCH FAIL: ${err.message}`; apiEl.style.color = '#cc3333'; }
+  }
 }
 
 function adminSkipAnalysis() {
@@ -1897,66 +1947,121 @@ async function initAnalysis() {
     }, 500);
   }, 4000);
 
-  if (appState.adminMode) document.getElementById('adm-api').textContent = 'Calling...';
+  const apiEl = document.getElementById('adm-api');
+  if (apiEl) apiEl.textContent = 'Calling...';
 
-  try {
-    const res = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        signal:      appState.signal,
-        idea:        appState.signal,
-        headline:    appState.headline,
-        story:       appState.story,
-        ideaType:    appState.ideaType,
-        icp:         appState.icp         || '',
-        method:      appState.method      || '',
-        destination: appState.destination || '',
-        competition: appState.competition || '',
-        q1:          appState.questions[0] || '',
-        q2:          appState.questions[1] || '',
-        q3:          appState.questions[2] || ''
-      })
-    });
+  const state = appState;
+  console.log("=== FRONTEND: CALLING /api/analyze ===");
+  console.log("Payload:", JSON.stringify({
+    ideaType: state.ideaType,
+    storyLength: state.story?.length,
+    ideaLength: (state.signal)?.length,
+    hasIcp: !!state.icp,
+    hasQ1: !!state.questions?.[0]
+  }));
 
-    const data = await res.json();
+  fetch('/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      idea:        state.signal || "",
+      signal:      state.signal || "",
+      headline:    state.headline || "",
+      story:       state.story || "",
+      ideaType:    state.ideaType || "personal",
+      icp:         state.icp         || "",
+      method:      state.method      || "",
+      destination: state.destination || "",
+      competition: state.competition || "",
+      q1:          state.questions?.[0] || "",
+      q2:          state.questions?.[1] || "",
+      q3:          state.questions?.[2] || ""
+    })
+  })
+  .then(async r => {
+    console.log("=== FRONTEND: GOT RESPONSE ===");
+    console.log("HTTP status:", r.status);
+    console.log("OK:", r.ok);
 
-    if (!res.ok || !data.success) {
-      console.error('API error detail:', data);
-      const apiEl = document.getElementById('adm-api');
-      if (apiEl) { apiEl.textContent = `Error: ${data.message || data.error || res.status}`; apiEl.style.color = '#cc3333'; }
+    let data;
+    try {
+      data = await r.json();
+      console.log("=== FRONTEND: PARSED JSON ===");
+      console.log("Keys:", Object.keys(data));
+      console.log("Success:", data.success);
+      console.log("Error:", data.error);
+      console.log("Message:", data.message);
+      console.log("Analysis length:", data.analysis?.length);
+    } catch (parseErr) {
+      console.error("=== FRONTEND: JSON PARSE FAILED ===", parseErr);
       clearInterval(loadingInt);
-      radarEl.innerHTML = `
-        <div style="text-align:center; padding: 40px 20px;">
-          <p style="color:#cc3333; font-size:16px; margin-bottom:12px;">Analysis failed</p>
-          <p style="color:rgba(240,236,228,0.6); font-size:13px; margin-bottom:8px;">${data.error || 'Unknown error'}</p>
-          <p style="color:rgba(240,236,228,0.4); font-size:12px; margin-bottom:24px;">${data.message || ''}</p>
-          <button onclick="retryAnalysis()" style="margin-right:12px;">Try again</button>
-          <button onclick="goToStage('stage-5')" style="background:transparent; border:1px solid rgba(240,236,228,0.2); color:rgba(240,236,228,0.5);">Go back</button>
-        </div>`;
+      showAnalysisError(`Response parse failed: ${parseErr.message}`, r.status, null);
+      return;
+    }
+
+    if (!r.ok || !data.success) {
+      console.error("=== FRONTEND: API RETURNED ERROR ===", data);
+      clearInterval(loadingInt);
+      showAnalysisError(
+        `${data.error || 'Unknown error'} — ${data.message || ''} (HTTP ${r.status})`,
+        r.status,
+        data
+      );
       return;
     }
 
     appState.analysisRaw = data.analysis;
     appState.analysis    = parseAnalysis(data.analysis);
 
-    const apiEl = document.getElementById('adm-api');
-    if (apiEl) { apiEl.textContent = 'OK'; apiEl.style.color = ''; }
+    if (apiEl) { apiEl.textContent = 'OK'; apiEl.style.color = '#4a9b6f'; }
 
     clearInterval(loadingInt);
     renderAnalysis();
-
-  } catch (err) {
-    console.error('Analysis fetch error:', err);
-    const apiEl = document.getElementById('adm-api');
-    if (apiEl) { apiEl.textContent = `Fetch failed: ${err.message}`; apiEl.style.color = '#cc3333'; }
+  })
+  .catch(err => {
+    console.error("=== FRONTEND: FETCH FAILED ENTIRELY ===");
+    console.error("Error:", err.message);
     clearInterval(loadingInt);
-    msgEl.textContent = `Something went wrong: ${err.message}`;
-    msgEl.style.opacity = '1';
+    showAnalysisError(`Network error: ${err.message}`, null, null);
+  });
+}
+
+function showAnalysisError(message, httpStatus, data) {
+  console.error("showAnalysisError called:", message, httpStatus, data);
+
+  const apiEl = document.getElementById('adm-api');
+  if (apiEl) { apiEl.textContent = `Error ${httpStatus || ''}`; apiEl.style.color = '#cc3333'; }
+
+  const adminOverlay = document.getElementById('admin-overlay');
+  if (adminOverlay && appState.adminMode) {
+    let errorDetail = adminOverlay.querySelector('#admin-error-detail');
+    if (!errorDetail) {
+      errorDetail = document.createElement('div');
+      errorDetail.id = 'admin-error-detail';
+      errorDetail.style.cssText = 'margin-top:8px;padding:8px;background:rgba(204,51,51,0.15);border:1px solid rgba(204,51,51,0.4);border-radius:4px;font-size:11px;color:#ff6b6b;word-break:break-word;max-width:280px;';
+      adminOverlay.appendChild(errorDetail);
+    }
+    errorDetail.innerHTML = `<strong>Error detail:</strong><br>${message}${data?.name ? `<br>Type: ${data.name}` : ''}${data?.detail ? `<br>Detail: ${JSON.stringify(data.detail)}` : ''}`;
+  }
+
+  const radarEl = document.getElementById('radar-loading');
+  if (radarEl) {
+    radarEl.innerHTML = `
+      <div style="text-align:center;padding:40px 24px;max-width:480px;margin:0 auto;">
+        <p style="color:#cc3333;font-size:15px;margin-bottom:12px;font-family:Georgia,serif;">Analysis failed</p>
+        <p style="color:rgba(240,236,228,0.7);font-size:13px;line-height:1.6;margin-bottom:8px;font-family:monospace;background:rgba(255,255,255,0.04);padding:12px;border-radius:4px;text-align:left;word-break:break-word;">${message}</p>
+        ${data ? `<p style="color:rgba(240,236,228,0.4);font-size:11px;font-family:monospace;text-align:left;word-break:break-word;margin-bottom:20px;">${escHtml(JSON.stringify(data, null, 2))}</p>` : ''}
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+          <button onclick="retryAnalysis()">Try again</button>
+          <button onclick="goToStage('stage-5')" style="background:transparent;border:1px solid rgba(240,236,228,0.2);color:rgba(240,236,228,0.5);">Go back</button>
+        </div>
+      </div>`;
   }
 }
 
 function retryAnalysis() {
+  const errorDetail = document.getElementById('admin-error-detail');
+  if (errorDetail) errorDetail.remove();
   goToStage('stage-6');
   initAnalysis();
 }

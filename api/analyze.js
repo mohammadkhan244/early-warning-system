@@ -1,12 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 export default async function handler(req, res) {
-  console.log("=== ANALYZE CALLED ===");
+  console.log("=== ANALYZE START ===", new Date().toISOString());
+  console.log("ANTHROPIC_API_KEY present:", !!process.env.ANTHROPIC_API_KEY);
+  console.log("ANTHROPIC_API_KEY length:", process.env.ANTHROPIC_API_KEY?.length);
+  console.log("Request body size:", JSON.stringify(req.body || {}).length);
+  console.log("Story length:", req.body?.story?.length);
+  console.log("IdeaType:", req.body?.ideaType);
   console.log("Method:", req.method);
   console.log("Body keys:", Object.keys(req.body || {}));
-  console.log("Story length:", req.body?.story?.length);
-  console.log("Idea:", req.body?.idea?.slice(0, 50) || req.body?.signal?.slice(0, 50));
-  console.log("IdeaType:", req.body?.ideaType);
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -136,19 +138,35 @@ Given what already exists, what would have to be true for this version to win? M
 
     const prompt = isPersonal ? personalPrompt : businessPrompt;
 
-    console.log("=== SENDING TO ANTHROPIC ===");
+    console.log("=== CALLING ANTHROPIC API ===");
     console.log("Prompt length:", prompt.length);
     console.log("Model: claude-sonnet-4-20250514");
 
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
-      messages: [{ role: "user", content: prompt }]
-    });
-
-    console.log("=== ANTHROPIC RESPONSE ===");
-    console.log("Stop reason:", response.stop_reason);
-    console.log("Output tokens:", response.usage?.output_tokens);
+    let response;
+    try {
+      response = await client.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 2000,
+        messages: [{ role: "user", content: prompt }]
+      });
+      console.log("=== ANTHROPIC SUCCESS ===");
+      console.log("Stop reason:", response.stop_reason);
+      console.log("Input tokens:", response.usage?.input_tokens);
+      console.log("Output tokens:", response.usage?.output_tokens);
+    } catch (err) {
+      console.error("=== ANTHROPIC CALL FAILED ===");
+      console.error("Name:", err.name);
+      console.error("Message:", err.message);
+      console.error("Status:", err.status);
+      console.error("Error body:", JSON.stringify(err.error || err, null, 2));
+      return res.status(500).json({
+        error: "Anthropic API call failed",
+        name: err.name,
+        message: err.message,
+        status: err.status,
+        detail: err.error || null
+      });
+    }
 
     const analysisText = response.content[0].text;
     console.log("Analysis length:", analysisText.length);
@@ -159,14 +177,13 @@ Given what already exists, what would have to be true for this version to win? M
     });
 
   } catch (err) {
-    console.error("=== ANTHROPIC ERROR ===");
+    console.error("=== OUTER ERROR ===");
     console.error("Error type:", err.constructor.name);
     console.error("Error message:", err.message);
-    console.error("Error status:", err.status);
     console.error("Full error:", JSON.stringify(err, null, 2));
 
     return res.status(500).json({
-      error: "Analysis failed",
+      error: "Handler failed",
       type: err.constructor.name,
       message: err.message,
       status: err.status || null
