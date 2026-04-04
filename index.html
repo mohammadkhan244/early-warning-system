@@ -1122,6 +1122,9 @@
       </div>
       <textarea id="story-textarea"
         oninput="onStoryInput()"
+        onpaste="setTimeout(onStoryInput, 50)"
+        oncut="setTimeout(onStoryInput, 50)"
+        ondrop="setTimeout(onStoryInput, 50)"
         onkeydown="onStoryKeydown()"></textarea>
     </div>
     <div class="story-nudge" id="story-nudge"></div>
@@ -1732,6 +1735,17 @@ function onStoryInput() {
   appState.story = document.getElementById('story-textarea').value;
   const wc = wordCount(appState.story);
   document.getElementById('word-count').textContent = wc + ' word' + (wc !== 1 ? 's' : '');
+
+  // Start timer on first content if not yet started (handles paste/drop)
+  if (!storyStarted && appState.story.trim().length > 0 && !appState.adminMode) {
+    storyStarted = true;
+    storyStartTs = Date.now();
+    const instr = document.getElementById('story-instruction');
+    instr.style.opacity = '0';
+    setTimeout(() => { instr.style.display = 'none'; }, 600);
+    storyTimerInt = setInterval(tickStory, 1000);
+  }
+
   checkFinish();
 }
 
@@ -1891,6 +1905,7 @@ async function initAnalysis() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         signal:      appState.signal,
+        idea:        appState.signal,
         headline:    appState.headline,
         story:       appState.story,
         ideaType:    appState.ideaType,
@@ -1904,24 +1919,46 @@ async function initAnalysis() {
       })
     });
 
-    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      console.error('API error detail:', data);
+      const apiEl = document.getElementById('adm-api');
+      if (apiEl) { apiEl.textContent = `Error: ${data.message || data.error || res.status}`; apiEl.style.color = '#cc3333'; }
+      clearInterval(loadingInt);
+      radarEl.innerHTML = `
+        <div style="text-align:center; padding: 40px 20px;">
+          <p style="color:#cc3333; font-size:16px; margin-bottom:12px;">Analysis failed</p>
+          <p style="color:rgba(240,236,228,0.6); font-size:13px; margin-bottom:8px;">${data.error || 'Unknown error'}</p>
+          <p style="color:rgba(240,236,228,0.4); font-size:12px; margin-bottom:24px;">${data.message || ''}</p>
+          <button onclick="retryAnalysis()" style="margin-right:12px;">Try again</button>
+          <button onclick="goToStage('stage-5')" style="background:transparent; border:1px solid rgba(240,236,228,0.2); color:rgba(240,236,228,0.5);">Go back</button>
+        </div>`;
+      return;
+    }
 
     appState.analysisRaw = data.analysis;
     appState.analysis    = parseAnalysis(data.analysis);
 
-    if (appState.adminMode) document.getElementById('adm-api').textContent = 'OK';
+    const apiEl = document.getElementById('adm-api');
+    if (apiEl) { apiEl.textContent = 'OK'; apiEl.style.color = ''; }
 
     clearInterval(loadingInt);
     renderAnalysis();
 
   } catch (err) {
-    console.error('Analysis error:', err);
-    if (appState.adminMode) document.getElementById('adm-api').textContent = 'Error';
+    console.error('Analysis fetch error:', err);
+    const apiEl = document.getElementById('adm-api');
+    if (apiEl) { apiEl.textContent = `Fetch failed: ${err.message}`; apiEl.style.color = '#cc3333'; }
     clearInterval(loadingInt);
-    msgEl.textContent = 'Something went wrong. Please try again.';
+    msgEl.textContent = `Something went wrong: ${err.message}`;
     msgEl.style.opacity = '1';
   }
+}
+
+function retryAnalysis() {
+  goToStage('stage-6');
+  initAnalysis();
 }
 
 function parseAnalysis(text) {

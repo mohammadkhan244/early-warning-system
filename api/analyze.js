@@ -1,84 +1,175 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).end();
+  console.log("=== ANALYZE CALLED ===");
+  console.log("Method:", req.method);
+  console.log("Body keys:", Object.keys(req.body || {}));
+  console.log("Story length:", req.body?.story?.length);
+  console.log("Idea:", req.body?.idea?.slice(0, 50) || req.body?.signal?.slice(0, 50));
+  console.log("IdeaType:", req.body?.ideaType);
 
-  const {
-    signal, headline, story,
-    ideaType = 'personal',
-    icp = '', method = '', destination = '', competition = '',
-    q1 = '', q2 = '', q3 = ''
-  } = req.body;
-
-  if (!signal || !story) {
-    return res.status(400).json({ error: "Missing required fields" });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const client = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-  });
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error("MISSING ANTHROPIC_API_KEY");
+    return res.status(500).json({
+      error: "API key not configured",
+      detail: "ANTHROPIC_API_KEY environment variable is missing"
+    });
+  }
+
+  const {
+    signal, idea, headline, story,
+    ideaType = "personal",
+    icp = "", method = "", destination = "", competition = "",
+    q1 = "", q2 = "", q3 = ""
+  } = req.body;
+
+  const ideaText = idea || signal || "";
+
+  if (!story || story.trim().length < 10) {
+    console.error("Story too short:", story?.length);
+    return res.status(400).json({
+      error: "Story too short",
+      detail: `Story length: ${story?.length || 0} characters`
+    });
+  }
 
   try {
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1024,
-      messages: [
-        {
-          role: "user",
-          content: `You are analyzing a future scenario written as part of an idea stress test exercise.
+    console.log("=== CALLING ANTHROPIC ===");
 
-Idea: ${signal}
-Headline: ${headline}
-Idea type: ${ideaType}${ideaType === 'business' ? `
-Customer (ICP): ${icp}
-How they find out: ${method}
-3-year destination: ${destination}
-Alternatives/competition: ${competition}` : ''}
-Their story: ${story}
-
-Analyze in exactly these labeled sections. Be specific to their actual words. Quote them back where relevant. Never be generic.
-
-UNPLANNED
-What did they surface that they didn't consciously plan to write? 2-3 specific observations from the text.
-
-EMOTIONAL FIELD
-What emotions are embedded that they didn't name directly? Name 4-6 specific emotional states present in the writing.
-
-ASSUMPTIONS
-The 5 most load-bearing assumptions in this story — beliefs that would have to be true for this future to exist. Rank 1-5, most load-bearing first.
-
-PREREQUISITES
-What technology, social norms, relationships, or systems must exist for this future to work?
-
-EARLY WARNINGS
-3 specific, observable things happening TODAY that signal this future is already arriving. Make these concrete and watchable.
-
-ABSENCE
-What was conspicuously missing from this story given the signal? What does that absence reveal?
-
-ONE ACTION
-One concrete action they could take THIS WEEK to test whether their assumptions are right. Under 2 hours. Under $50. Specific to their story, not generic advice.
-
-THE PERSON'S OWN REFLECTIONS
-They answered three questions before seeing any analysis. Use these to sharpen your findings — they are evidence too.
-
-Who's in the story and who isn't:
-${q1}
-
-What they assumed stayed the same:
-${q2}
-
-What they didn't write about:
-${q3}
-
-Where their reflections confirm your findings, note it. Where they contradict or add to your findings, note that too.`,
-        },
-      ],
+    const client = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY
     });
 
-    res.json({ analysis: response.content[0].text });
+    const isPersonal = ideaType !== "business";
+
+    const sharedContext = `
+The thing they're circling: ${ideaText || "not specified"}
+Headline they gave it: ${headline || "not specified"}
+Story they wrote: ${story}
+Their own reflections:
+- Who's in the story / who isn't: ${q1 || "not answered"}
+- What they assumed stayed the same: ${q2 || "not answered"}
+- What they didn't write about: ${q3 || "not answered"}
+`;
+
+    const personalPrompt = `You are analyzing a 10-minute clarity sprint. Someone has been circling a decision or idea and wrote a story where it resolved. Surface what their writing reveals that they couldn't see by thinking about it directly.
+
+For every finding, quote their exact words as evidence. If something is absent, name it — absence is information.
+
+${sharedContext}
+
+PART 0 — THE WORLDVIEW UNDERNEATH
+What does this story assume to be permanently true about how the world works — about people, systems, what gets rewarded? What future does this worldview create if it's right? What falls through the cracks if it's wrong?
+
+PART 1 — HIDDEN ASSUMPTIONS
+The 5 most load-bearing assumptions. Rank 1-5, most load-bearing first. For each: quote the exact words, explain why it's load-bearing.
+
+PART 2 — SIGNALS TO WATCH
+3 signals classified:
+EYEWITNESS: something they'd notice without trying, in daily life
+EXPLAINER: connects this signal to other domains
+EXPERT: only people deep in this space would catch this
+Focus on the eyewitness signal most.
+
+PART 3 — THREE THINGS TO DO THIS WEEK
+3 actions. Each: under 2 hours, under $50, produces real signal — not motion, not planning. Specific to their situation.
+
+PART 4 — WHAT'S MISSING
+What was conspicuously absent? Name it directly. Absence of evidence is evidence.`;
+
+    const businessPrompt = `You are analyzing a 10-minute clarity sprint about a business idea or career move. Someone has been circling this and wrote a story where it resolved. Surface what their writing reveals that they couldn't see by thinking about it directly.
+
+For every finding, quote their exact words as evidence. If something is absent, name it — absence is information.
+
+${sharedContext}
+Their stated vision:
+- Who it's for: ${icp || "not specified"}
+- Method: ${method || "not specified"}
+- Transformation: ${destination || "not specified"}
+- What already exists: ${competition || "not specified"}
+
+PART 0 — THE WORLDVIEW UNDERNEATH
+What does this story assume to be permanently true about the market, customers, how value gets created? What future does this worldview create if right? What falls through the cracks if wrong?
+
+PART 1 — HIDDEN ASSUMPTIONS
+5 most load-bearing assumptions. Rank 1-5. Include assumptions about market, customer, timing, capability. Quote exact words for each.
+
+PART 2 — STATED VISION VS WHAT THE STORY REVEALED
+Compare what they said they were building vs what the story showed.
+
+WHO IT'S FOR
+Stated: ${icp || "not specified"}
+Story revealed: [who actually appeared]
+Evidence: [direct quote or note absence]
+
+METHOD
+Stated: ${method || "not specified"}
+Story revealed: [how work was actually described]
+Evidence: [direct quote or note absence]
+
+DESTINATION
+Stated: ${destination || "not specified"}
+Story revealed: [where story actually ended up]
+Evidence: [direct quote or note absence]
+
+COMPETITION
+Stated: ${competition || "not specified"}
+Story revealed: [what story assumed didn't exist]
+Evidence: [direct quote or note absence]
+
+PART 3 — SIGNALS TO WATCH
+3 signals:
+EYEWITNESS: something they'd notice in daily life without trying
+EXPLAINER: connects to other domains
+EXPERT: only people deep in this market would catch
+Then: who else is watching the same signals for different reasons?
+
+PART 4 — THREE THINGS TO DO BEFORE ANNOUNCING
+3 actions this week. Each: under 2 hours, under $50, produces signal from actual humans.
+
+PART 5 — MARKET REALITY CHECK
+Given what already exists, what would have to be true for this version to win? Most honest interpretation of differentiation.`;
+
+    const prompt = isPersonal ? personalPrompt : businessPrompt;
+
+    console.log("=== SENDING TO ANTHROPIC ===");
+    console.log("Prompt length:", prompt.length);
+    console.log("Model: claude-sonnet-4-20250514");
+
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2000,
+      messages: [{ role: "user", content: prompt }]
+    });
+
+    console.log("=== ANTHROPIC RESPONSE ===");
+    console.log("Stop reason:", response.stop_reason);
+    console.log("Output tokens:", response.usage?.output_tokens);
+
+    const analysisText = response.content[0].text;
+    console.log("Analysis length:", analysisText.length);
+
+    return res.json({
+      success: true,
+      analysis: analysisText
+    });
+
   } catch (err) {
-    console.error("Anthropic API error:", err);
-    res.status(500).json({ error: err.message || "Analysis failed" });
+    console.error("=== ANTHROPIC ERROR ===");
+    console.error("Error type:", err.constructor.name);
+    console.error("Error message:", err.message);
+    console.error("Error status:", err.status);
+    console.error("Full error:", JSON.stringify(err, null, 2));
+
+    return res.status(500).json({
+      error: "Analysis failed",
+      type: err.constructor.name,
+      message: err.message,
+      status: err.status || null
+    });
   }
 }
