@@ -1707,36 +1707,65 @@ function buildHeadlineExamples() {
   const story = appState.story || '';
   const signal = appState.signal || '';
 
-  const stopWords = new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','my','i','it','is','was','are','were','be','been','have','has','had','that','this','not','from','by','as','so','we','they','what','how','just','now','its','our','their','when','there','about','which','who','up','out','if','do','did','he','she','me','him','her','his','one','all','some','been','into','than','then','can','will','would','could','should','more','also','back','get','got','like','know','think','see','going','after','before','because','over','still','here','day','time','every']);
+  const stopWords = new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','my','i','it','is','was','are','were','be','been','have','has','had','that','this','not','from','by','as','so','we','they','what','how','just','now','its','our','their','when','there','about','which','who','up','out','if','do','did','he','she','me','him','her','his','one','all','some','into','than','then','can','will','would','could','should','more','also','back','get','got','like','know','think','see','going','after','before','because','over','still','here','day','time','every','something','anything','everything','nothing','someone','anyone','everyone','though','through','while','those','these','very','really','already','always','never','often','much','many','few','same','different','years','year','thought','felt','wanted','needed','worked','working','making','coming','taking','giving','looking','started','starting','stopped','turned','putting']);
 
-  const words = story.toLowerCase()
-    .replace(/[^a-z\s]/g, ' ')
-    .split(/\s+/)
-    .filter(w => w.length > 4 && !stopWords.has(w));
+  const cap = w => w.charAt(0).toUpperCase() + w.slice(1);
 
-  const freq = {};
-  words.forEach(w => freq[w] = (freq[w] || 0) + 1);
-  const topWords = Object.entries(freq)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([w]) => w.charAt(0).toUpperCase() + w.slice(1));
+  // Nouns: words that follow articles/possessives in the story
+  const nouns = [];
+  const nounRe = /\b(?:the|my|a|an|this|our|your)\s+([a-zA-Z]{4,})/gi;
+  let m;
+  while ((m = nounRe.exec(story)) !== null) {
+    const w = m[1].toLowerCase();
+    if (!stopWords.has(w)) nouns.push(w);
+  }
 
-  const topic = topWords[0] || signal.split(' ').slice(0, 2).join(' ') || 'This';
-  const topic2 = topWords[1] || 'Move';
+  // Actions: -ing gerunds (meaningful ones, 6+ chars)
+  const actions = [];
+  const ingRe = /\b([a-zA-Z]{6,}ing)\b/g;
+  while ((m = ingRe.exec(story)) !== null) {
+    const w = m[1].toLowerCase();
+    if (!stopWords.has(w)) actions.push(w);
+  }
+
+  // Proper nouns: capitalized words mid-sentence (not after . or start of string)
+  const properNouns = [];
+  const properRe = /(?<=[a-z,;]\s)([A-Z][a-z]{3,})/g;
+  while ((m = properRe.exec(story)) !== null) {
+    const w = m[1];
+    if (!stopWords.has(w.toLowerCase())) properNouns.push(w);
+  }
+
+  // Rank by frequency
+  const rank = arr => {
+    const freq = {};
+    arr.forEach(w => freq[w] = (freq[w] || 0) + 1);
+    return Object.entries(freq).sort((a, b) => b[1] - a[1]).map(([w]) => w);
+  };
+
+  const topNouns   = rank(nouns);
+  const topActions = rank(actions);
+  const topProper  = rank(properNouns);
+
+  const fallback = signal.split(/\s+/).find(w => w.length > 3) || 'This';
+  const noun1   = cap(topProper[0] || topNouns[0] || fallback);
+  const noun2   = cap(topNouns[1] || topNouns[0] || 'Direction');
+  const action  = cap(topActions[0] || topNouns[0] || fallback);
 
   return [
-    `Finally ${topic}`,
-    `The ${topic} I Actually Made`,
-    `${topic} and ${topic2}`,
-    `Smaller Than Expected, Better Than Planned`,
-    `Back to Where I Should Be`
+    `The ${noun1} Plan`,
+    `${noun1}, Finally`,
+    `${action} Forward`,
+    `${noun1} and ${noun2}`,
+    `What the ${noun1} Taught Me`
   ];
 }
 
 function startHeadlineCycle() {
+  if (appState.headline) return; // user already typed — leave it alone
   const el = document.getElementById('headline-placeholder');
   const examples = buildHeadlineExamples();
-  el.style.opacity = '1';
+  el.style.opacity = hdlFocused ? '0' : '1';
   el.textContent = examples[hdlIdx % examples.length];
   if (hdlInterval) return;
   hdlInterval = setInterval(() => {
