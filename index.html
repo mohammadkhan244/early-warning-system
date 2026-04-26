@@ -1357,25 +1357,12 @@
     </div>
     <div class="questions-panel">
 
-      <h2>Three questions before you see the analysis.</h2>
-      <p class="stage-subtext">Write your answers down. Your unguided answers are more honest.</p>
+      <h2>One question before you see the analysis.</h2>
+      <p class="stage-subtext">Don't think about it. Write your first answer.</p>
 
       <div class="question-item" id="q1-item">
-        <p class="question-text">Who's in your story — and who isn't?</p>
-        <p class="question-helper">One person wrote an entire future about his business and never mentioned a single customer — only the work itself. He hadn't realized he'd been building for the craft, not the market. Another wrote a rich picture of her life and never once put her partner in it. Who was there? Who was absent? What does the gap tell you?</p>
-        <textarea class="question-input" id="q1-input" placeholder="Who showed up — and who didn't..." rows="3" oninput="onQInput(1)"></textarea>
-      </div>
-
-      <div class="question-item hidden" id="q2-item">
-        <p class="question-text">What did you assume stayed the same?</p>
-        <p class="question-helper">One person wrote a detailed story about her consulting practice and assumed the client relationships she has now would still exist in 5 years. She hadn't noticed she'd written zero new business development into the future. She was building toward a version of success that required her current relationships to last forever. What did you assume stays the same that might actually change?</p>
-        <textarea class="question-input" id="q2-input" placeholder="What I took for granted..." rows="3" oninput="onQInput(2)"></textarea>
-      </div>
-
-      <div class="question-item hidden" id="q3-item">
-        <p class="question-text">What didn't you write — and what does that mean?</p>
-        <p class="question-helper">One person's idea was about building a community. He wrote extensively about the content and the platform — and never once wrote about what it felt like to be in the room with the people he was building for. He hadn't noticed he was building infrastructure for a community he'd never actually imagined. What was conspicuously missing? What did you not let yourself write?</p>
-        <textarea class="question-input" id="q3-input" placeholder="What was absent from the story..." rows="3" oninput="onQInput(3)"></textarea>
+        <p class="question-text">What surprised you the most when writing it?</p>
+        <textarea class="question-input" id="q1-input" placeholder="I didn't expect to write..." rows="3" oninput="onQInput(1)"></textarea>
       </div>
 
       <div style="margin-top:16px;">
@@ -2063,13 +2050,9 @@ function initQuestions() {
   document.getElementById('questions-story-text').textContent = appState.story;
 
   // Reset question visibility
-  document.getElementById('q2-item').classList.add('hidden');
-  document.getElementById('q3-item').classList.add('hidden');
   document.getElementById('questions-continue').classList.add('hidden');
 
   if (appState.adminMode) {
-    document.getElementById('q2-item').classList.remove('hidden');
-    document.getElementById('q3-item').classList.remove('hidden');
     document.getElementById('questions-continue').classList.remove('hidden');
   }
 }
@@ -2078,13 +2061,7 @@ function onQInput(n) {
   appState.questions[n - 1] = document.getElementById('q' + n + '-input').value;
   const len = appState.questions[n - 1].length;
 
-  if (n === 1 && (appState.adminMode || len > 30)) {
-    document.getElementById('q2-item').classList.remove('hidden');
-  }
-  if (n === 2 && (appState.adminMode || len > 30)) {
-    document.getElementById('q3-item').classList.remove('hidden');
-  }
-  if (n === 3 && (appState.adminMode || len > 30)) {
+  if (n === 1 && (appState.adminMode || len > 20)) {
     document.getElementById('questions-continue').classList.remove('hidden');
   }
 }
@@ -2784,11 +2761,9 @@ function generatePDF() {
   y += LABEL_H + 3;
 
   const qTexts = [
-    "Who's in your story — and who isn't?",
-    "What did you assume stayed the same?",
-    "What didn't you write — and what does that mean?"
+    "What surprised you the most when writing it?"
   ];
-  for (let qi = 0; qi < 3; qi++) {
+  for (let qi = 0; qi < 1; qi++) {
     const answer  = appState.questions[qi] || '—';
     const qLns    = doc.splitTextToSize(qTexts[qi], CW);
     const aLns    = doc.splitTextToSize(answer, CW);
