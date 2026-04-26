@@ -359,18 +359,23 @@
     .story-context-bar {
       padding: 14px 60px;
       display: flex;
-      gap: 48px;
+      gap: 24px;
       align-items: center;
+      justify-content: space-between;
       border-bottom: 1px solid #111108;
-      font-size: 0.75rem;
-      color: #3a3a34;
       background: #0a0a0a;
       position: sticky;
       top: 0;
       z-index: 10;
       flex-wrap: wrap;
     }
-    .story-context-bar strong { color: #4a4a42; }
+    #context-signal-display {
+      font-family: Georgia, serif;
+      font-size: clamp(14px, 2vw, 18px);
+      color: rgba(240, 236, 228, 0.85);
+      font-style: italic;
+      line-height: 1.4;
+    }
     .story-timer {
       font-family: Georgia, 'Times New Roman', serif;
       font-size: 2.4rem;
@@ -838,13 +843,6 @@
     .hidden { display: none !important; }
 
     /* ─── MIC BUTTON ─── */
-    .story-timer-row {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      padding: 16px 0 8px;
-    }
     #mic-button {
       display: flex;
       align-items: center;
@@ -1320,10 +1318,7 @@
 <div id="stage-4" class="stage">
   <div class="story-container">
     <div class="story-context-bar">
-      <span><strong>Idea:</strong> <span id="context-signal"></span></span>
-      <span><strong>Future:</strong> <span id="context-headline"></span></span>
-    </div>
-    <div class="story-timer-row">
+      <span id="context-signal-display"></span>
       <div class="story-timer" id="story-timer"></div>
       <button id="mic-button" onclick="micButtonClick()">🎤 Speak your story</button>
     </div>
@@ -1690,7 +1685,7 @@ My afternoon strategy session runs long — six people, none of whom I've met in
 At five o'clock I close my laptop and realize I haven't left the apartment. That used to bother me. Now I just note it and go for a run.`;
 
   document.getElementById('story-textarea').value    = appState.story;
-  document.getElementById('context-signal').textContent   = appState.signal;
+  document.getElementById('context-signal-display').textContent = appState.signal;
   document.getElementById('story-instruction').style.opacity = '0';
   setTimeout(() => { document.getElementById('story-instruction').style.display = 'none'; }, 600);
 
@@ -1837,8 +1832,7 @@ let storyLastKey   = null;
 let nudgeTimeouts  = [];
 
 function initStory() {
-  document.getElementById('context-signal').textContent   = appState.signal   || '(your idea)';
-  document.getElementById('context-headline').textContent = appState.headline || '(your name)';
+  document.getElementById('context-signal-display').textContent = appState.signal || '(your idea)';
 
   const dur = appState.timerDuration;
   document.getElementById('story-timer').textContent = dur + ':00';
