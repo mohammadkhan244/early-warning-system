@@ -1353,6 +1353,10 @@
     <div class="analysis-container" id="analysis-container">
       <p class="analysis-note">This is built from your words, not generic advice.</p>
 
+      <div class="analysis-section" id="sec-worldview">
+        <div class="analysis-label">The worldview underneath</div>
+        <div class="analysis-text" id="txt-worldview"></div>
+      </div>
       <div class="analysis-section" id="sec-unplanned">
         <div class="analysis-label">What you didn't plan to write</div>
         <div class="analysis-text" id="txt-unplanned"></div>
@@ -2027,6 +2031,7 @@ const loadingMsgs = [
 ];
 let loadingInt = null, loadingIdx = 0;
 let analysisTimerInt = null;
+let analysisInProgress = false;
 
 async function savePartialRecord() {
   const state = appState;
@@ -2075,6 +2080,9 @@ async function handleQuestionsComplete() {
 }
 
 async function initAnalysis() {
+  if (analysisInProgress) return;
+  analysisInProgress = true;
+
   // Show radar
   const radarEl = document.getElementById('radar-loading');
   radarEl.style.display = '';
@@ -2136,6 +2144,7 @@ async function initAnalysis() {
     } catch (parseErr) {
       console.error("=== FRONTEND: JSON PARSE FAILED ===", parseErr);
       clearInterval(loadingInt);
+      analysisInProgress = false;
       showAnalysisError(`Response parse failed: ${parseErr.message}`, r.status, null);
       return;
     }
@@ -2143,6 +2152,7 @@ async function initAnalysis() {
     if (!r.ok || !data.success) {
       console.error("=== FRONTEND: API RETURNED ERROR ===", data);
       clearInterval(loadingInt);
+      analysisInProgress = false;
       showAnalysisError(
         `${data.error || 'Unknown error'} — ${data.message || ''} (HTTP ${r.status})`,
         r.status,
@@ -2157,12 +2167,14 @@ async function initAnalysis() {
     if (apiEl) { apiEl.textContent = 'OK'; apiEl.style.color = '#4a9b6f'; }
 
     clearInterval(loadingInt);
+    analysisInProgress = false;
     renderAnalysis(data.analysis);
   })
   .catch(err => {
     console.error("=== FRONTEND: FETCH FAILED ENTIRELY ===");
     console.error("Error:", err.message);
     clearInterval(loadingInt);
+    analysisInProgress = false;
     showAnalysisError(`Network error: ${err.message}`, null, null);
   });
 }
@@ -2203,6 +2215,7 @@ function showAnalysisError(message, httpStatus, data) {
 function retryAnalysis() {
   const errorDetail = document.getElementById('admin-error-detail');
   if (errorDetail) errorDetail.remove();
+  analysisInProgress = false;
   goToStage('stage-6');
   initAnalysis();
 }
@@ -2330,7 +2343,7 @@ function renderAnalysis(analysisText) {
 
   // Map section keys to existing txt-* element IDs
   const elementMap = {
-    worldview:        'txt-unplanned',
+    worldview:        'txt-worldview',
     unplanned:        'txt-unplanned',
     emotional:        'txt-emotional',
     assumptions:      'txt-assumptions',
@@ -2348,13 +2361,19 @@ function renderAnalysis(analysisText) {
   setTimeout(() => {
     radarEl.style.display = 'none';
 
+    // Clear all mapped elements before rendering
+    for (const elId of Object.values(elementMap)) {
+      const el = document.getElementById(elId);
+      if (el) el.innerHTML = '';
+    }
+
     let renderedCount = 0;
 
     for (const [key, elId] of Object.entries(elementMap)) {
       const el = document.getElementById(elId);
       if (!el) continue;
       const content = sections[key];
-      if (content && !el.innerHTML) {  // don't overwrite if already set by earlier key
+      if (content) {
         el.innerHTML = formatSectionContent(content);
         renderedCount++;
       }
