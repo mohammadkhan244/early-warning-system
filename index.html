@@ -745,21 +745,21 @@
     #stage-7 .stage-content { text-align: center; }
     .reveal-line {
       font-family: Georgia, serif;
-      font-size: clamp(1.5rem, 4vw, 2.4rem);
+      font-size: clamp(1.2rem, 3.5vw, 2rem);
       color: #f0ece4;
-      line-height: 1.4;
-      margin-bottom: 12px;
+      line-height: 1.35;
+      margin-bottom: clamp(6px, 1.2vh, 12px);
       opacity: 0;
       transition: opacity 0.9s ease;
     }
     .reveal-line.visible { opacity: 1; }
     .reveal-paragraph {
       max-width: 500px;
-      margin: 44px auto;
+      margin: clamp(12px, 2.5vh, 28px) auto;
       font-family: Georgia, serif;
       font-size: 1rem;
       color: #6a6a62;
-      line-height: 1.85;
+      line-height: 1.75;
       opacity: 0;
       transition: opacity 0.9s ease;
     }
@@ -771,7 +771,7 @@
     .cta-divider {
       border: none;
       border-top: 1px solid #141410;
-      margin: 52px 0;
+      margin: clamp(20px, 4vh, 40px) 0;
     }
     .email-label {
       font-size: 0.72rem;
@@ -780,7 +780,7 @@
       text-transform: uppercase;
       margin-bottom: 6px;
     }
-    .email-wrapper { margin: 28px 0; }
+    .email-wrapper { margin: clamp(12px, 2vh, 20px) 0; }
     .cta-confirmation {
       font-size: 0.85rem;
       color: #b87333;
@@ -989,9 +989,10 @@
     #stage-biz,
     #stage-5,
     #stage-6,
+    #stage-7,
     #stage-8 {
       justify-content: flex-start;
-      padding-top: clamp(32px, 6vh, 64px);
+      padding-top: clamp(24px, 5vh, 56px);
     }
 
     /* ─── TYPOGRAPHY ─── */
@@ -1114,10 +1115,14 @@
 
     /* ─── REVEAL STAGE ─── */
     .reveal-line {
-      font-size: clamp(16px, 3.5vw, 34px);
+      font-size: clamp(15px, 3vw, 28px);
     }
     .reveal-paragraph {
       font-size: clamp(13px, 1.6vw, 15px);
+      margin: clamp(10px, 2vh, 24px) auto;
+    }
+    #stage-7 .stage-content {
+      padding-bottom: clamp(24px, 4vh, 48px);
     }
 
     /* ─── CTA STAGE ─── */
@@ -1435,7 +1440,7 @@
     <p class="session-copy">The sprint finds the Default Narrative. The session is where we examine what it's been building — and whether you want to keep building it.</p>
     <a href="https://tidycal.com/mohammadukhan135/uncover-your-myth" class="btn btn-primary">Book a session — $500</a>
 
-    <hr class="cta-divider" style="margin-top:52px;">
+    <hr class="cta-divider">
     <button onclick="restartApp()">← Start over</button>
   </div>
 </div>
