@@ -1312,28 +1312,6 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════
-     STAGE NAME: NARRATIVE NAME
-═══════════════════════════════════════════════ -->
-<div id="stage-name" class="stage">
-  <div class="stage-content">
-    <h2>Give your narrative a name.</h2>
-    <p class="stage-subtext">Something short and memorable — a label you can refer back to. Not a description. A name.</p>
-
-    <div class="fill-blank">
-      <div class="fill-blank-input-wrapper">
-        <div class="fill-blank-placeholder" id="narrative-name-placeholder"></div>
-        <input type="text" id="narrative-name-input" style="min-height:0;padding:12px 16px;"
-          oninput="onNarrativeNameInput()"
-          onfocus="onNarrativeNameFocus()"
-          onblur="onNarrativeNameBlur()">
-      </div>
-    </div>
-
-    <button id="narrative-name-continue" class="btn" disabled onclick="handleNarrativeNameContinue()">Continue</button>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════
      STAGE 6: ANALYSIS
 ═══════════════════════════════════════════════ -->
 <div id="stage-6" class="stage">
@@ -1498,7 +1476,6 @@ const appState = {
   questions: [''],
   analysis: null,
   analysisRaw: '',
-  narrativeName: '',
   email: '',
   completionTime: null,
   currentStage: 'stage-1',
@@ -1512,7 +1489,7 @@ if (appState.adminMode) {
 }
 
 // ─── STAGE ORDER ─────────────────────────────────
-const STAGES = ['stage-1','stage-2','stage-3-5','stage-4','stage-3','stage-5','stage-name','stage-6','stage-7','stage-8'];
+const STAGES = ['stage-1','stage-2','stage-3-5','stage-4','stage-3','stage-5','stage-6','stage-7','stage-8'];
 
 // ─── NAVIGATION ──────────────────────────────────
 function goToStage(id) {
@@ -1567,7 +1544,6 @@ function adminSkip() {
   const next = STAGES[idx + 1];
   if (next === 'stage-4') initStory();
   if (next === 'stage-5') initQuestions();
-  if (next === 'stage-name') startNarrativeNameCycle();
   if (next === 'stage-6' || next === 'analysis') { savePartialRecord(); initAnalysis(); }
   if (next === 'stage-7') initReveal();
   goToStage(next);
@@ -1592,7 +1568,7 @@ async function testAnalyzeEndpoint() {
         idea: "test idea for admin check",
         headline: "Test Headline",
         story: "It is five years from now and my test idea worked. I am sitting at my desk feeling good about things. The work is going well and I have clients who appreciate what I do.",
-        narrativeName: "The Safe Bet",
+        narrativeName: "Test Headline",
         q1: "I didn't expect to feel relieved"
       })
     });
@@ -2036,66 +2012,6 @@ function onQInput(n) {
 }
 
 
-// ─── NARRATIVE NAME STAGE ────────────────────────
-let narrativeNameIdx = 0, narrativeNameInterval = null, narrativeNameFocused = false;
-let narrativeNameExamples = [];
-
-function buildNarrativeNameExamples() {
-  const sig = appState.signal || 'my next move';
-  const words = sig.split(' ').filter(w => w.length > 3);
-  const topic = words.slice(0, 2).join(' ') || sig;
-  const year = new Date().getFullYear();
-  narrativeNameExamples = [
-    `My Goals for ${year}`,
-    `Leap of Faith in ${topic}`,
-    `How ${topic} Changes From Here`,
-    `The ${topic} Decision`,
-    `What I'm Building in ${year}`
-  ];
-}
-
-function startNarrativeNameCycle() {
-  buildNarrativeNameExamples();
-  const el = document.getElementById('narrative-name-placeholder');
-  el.style.opacity = '1';
-  el.textContent = narrativeNameExamples[narrativeNameIdx];
-  if (narrativeNameInterval) return;
-  narrativeNameInterval = setInterval(() => {
-    if (narrativeNameFocused || appState.narrativeName) return;
-    el.style.opacity = '0';
-    setTimeout(() => {
-      narrativeNameIdx = (narrativeNameIdx + 1) % narrativeNameExamples.length;
-      el.textContent = narrativeNameExamples[narrativeNameIdx];
-      el.style.opacity = '1';
-    }, 500);
-  }, 3000);
-}
-
-function onNarrativeNameFocus() {
-  narrativeNameFocused = true;
-  document.getElementById('narrative-name-placeholder').style.opacity = '0';
-}
-
-function onNarrativeNameBlur() {
-  if (!appState.narrativeName) {
-    narrativeNameFocused = false;
-    document.getElementById('narrative-name-placeholder').style.opacity = '1';
-  }
-}
-
-function onNarrativeNameInput() {
-  appState.narrativeName = document.getElementById('narrative-name-input').value;
-  document.getElementById('narrative-name-continue').disabled =
-    !appState.adminMode && appState.narrativeName.length < 3;
-}
-
-function handleNarrativeNameContinue() {
-  savePartialRecord();
-  goToStage('stage-6');
-  initAnalysis();
-}
-
-
 // ─── ANALYSIS STAGE ──────────────────────────────
 const loadingMsgs = [
   "Reading your story...",
@@ -2148,8 +2064,9 @@ async function savePartialRecord() {
 }
 
 async function handleQuestionsComplete() {
-  goToStage('stage-name');
-  startNarrativeNameCycle();
+  savePartialRecord();
+  goToStage('stage-6');
+  initAnalysis();
 }
 
 async function initAnalysis() {
@@ -2183,7 +2100,7 @@ async function initAnalysis() {
     storyLength: state.story?.length,
     ideaLength: (state.signal)?.length,
     hasQ1: !!state.questions?.[0],
-    hasNarrativeName: !!state.narrativeName
+    hasHeadline: !!state.headline
   }));
 
   fetch('/api/analyze', {
@@ -2193,7 +2110,7 @@ async function initAnalysis() {
       idea:          state.signal || "",
       headline:      state.headline || "",
       story:         state.story || "",
-      narrativeName: state.narrativeName || "",
+      narrativeName: state.headline || "",
       q1:            state.questions?.[0] || ""
     })
   })
@@ -2838,7 +2755,6 @@ function restartApp() {
   appState.analysis = null;
   appState.analysisRaw = '';
   appState.analysisSections = null;
-  appState.narrativeName = '';
   appState.email = '';
   appState.completionTime = null;
 
@@ -2885,14 +2801,6 @@ function restartApp() {
   document.getElementById('questions-continue').classList.add('hidden');
 
   // Reset narrative name
-  appState.narrativeName = '';
-  narrativeNameIdx = 0;
-  narrativeNameFocused = false;
-  clearInterval(narrativeNameInterval);
-  narrativeNameInterval = null;
-  document.getElementById('narrative-name-input').value = '';
-  document.getElementById('narrative-name-continue').disabled = true;
-
   // Reset signal/headline placeholder cycles
   sigIdx = 0; sigFocused = false;
   hdlIdx = 0; hdlFocused = false;
@@ -3063,7 +2971,6 @@ const stageObs = new MutationObserver(mutations => {
     const el = m.target;
     if (el.id === 'stage-2' && el.classList.contains('active')) startSignalCycle();
     if (el.id === 'stage-3' && el.classList.contains('active')) startHeadlineCycle();
-    if (el.id === 'stage-name' && el.classList.contains('active')) startNarrativeNameCycle();
   }
 });
 document.querySelectorAll('.stage').forEach(s => {
@@ -3081,7 +2988,6 @@ document.querySelectorAll('.stage').forEach(s => {
     setTimeout(() => {
       document.getElementById('signal-continue').disabled  = false;
       document.getElementById('headline-continue').disabled = false;
-      document.getElementById('narrative-name-continue').disabled = false;
     }, 0);
   }
 })();
