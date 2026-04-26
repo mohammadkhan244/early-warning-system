@@ -38,7 +38,10 @@ ${story}
 
 What surprised them when writing it: ${q1 || "not answered"}
 
-Respond with exactly these 7 sections in exactly this order, using exactly these headers:
+Respond with exactly these sections in exactly this order, using exactly these headers:
+
+## YOUR OWN WORDS
+Find the single most unplanned line in this story — the one that reads like it slipped past the writer's conscious control. Not the most dramatic line, not the most poetic line — the one that was written before the writer could decide whether to write it. Return only that line, in quotes. Nothing before it. Nothing after it.
 
 ## PART 0 — THE WORLDVIEW UNDERNEATH
 What does this story assume to be permanently true about how the world works — about people, systems, and what gets rewarded? What future does this worldview create if it's right? What falls through the cracks if it's wrong?

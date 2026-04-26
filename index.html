@@ -1180,6 +1180,83 @@
       .question-input { min-height: 56px; }
       #story-textarea { min-height: 160px; max-height: 40vh; }
     }
+
+    .analysis-section.own-words {
+      border-left: 2px solid #b87333;
+      padding-left: 20px;
+      margin-bottom: 48px;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    .analysis-section.own-words .analysis-text {
+      font-family: Georgia, serif;
+      font-size: clamp(16px, 2.2vw, 22px);
+      color: #f0ece4;
+      line-height: 1.6;
+      font-style: italic;
+    }
+
+    #scroll-indicator {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      pointer-events: none;
+    }
+    #scroll-arrow {
+      color: #b87333;
+      font-size: 20px;
+      opacity: 0.7;
+      animation: bounce 1.8s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); opacity: 0.7; }
+      50% { transform: translateY(6px); opacity: 1; }
+    }
+
+    #section-nav {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .section-nav-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2a2a24;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      position: relative;
+    }
+    .section-nav-dot:hover { background: #b87333; transform: scale(1.3); }
+    .section-nav-dot.active { background: #b87333; }
+    .section-nav-dot:hover::after {
+      content: attr(title);
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(10,10,10,0.9);
+      color: #f0ece4;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 3px;
+      white-space: nowrap;
+      pointer-events: none;
+      font-family: system-ui, sans-serif;
+      letter-spacing: 0.04em;
+    }
+
+    @media (max-width: 600px) {
+      #section-nav { display: none !important; }
+      #scroll-indicator { bottom: 24px; }
+    }
   </style>
 </head>
 <body>
@@ -1353,6 +1430,9 @@
     <div class="analysis-container" id="analysis-container">
       <p class="analysis-note">This is built from your words, not generic advice.</p>
 
+      <div class="analysis-section own-words" id="sec-own-words">
+        <div class="analysis-text" id="txt-own-words"></div>
+      </div>
       <div class="analysis-section" id="sec-worldview">
         <div class="analysis-label">The worldview underneath</div>
         <div class="analysis-text" id="txt-worldview"></div>
@@ -2221,6 +2301,10 @@ function parseAnalysisSections(text) {
 
   const sections = {};
 
+  // Extract YOUR OWN WORDS (no PART number)
+  const ownWordsMatch = text.match(/## YOUR OWN WORDS\s*\n([\s\S]*?)(?=\n## PART)/);
+  if (ownWordsMatch) sections['ownWords'] = ownWordsMatch[1].trim();
+
   // Split on ## PART N — headers
   const parts = text.split(/\n?## PART (\d+) — ([^\n]+)\n/);
 
@@ -2337,6 +2421,7 @@ function renderAnalysis(analysisText) {
 
   // Map section keys to existing txt-* element IDs
   const elementMap = {
+    ownWords:         'txt-own-words',
     worldview:        'txt-worldview',
     unplanned:        'txt-unplanned',
     emotional:        'txt-emotional',
@@ -2394,7 +2479,46 @@ function renderAnalysis(analysisText) {
 
     // Start forced read timer
     startAnalysisTimer();
+    setTimeout(initSectionNav, 500);
   }, 600);
+}
+
+function initSectionNav() {
+  const nav = document.getElementById('section-nav');
+  const scrollIndicator = document.getElementById('scroll-indicator');
+  const stage6 = document.getElementById('stage-6');
+  if (!nav || !stage6) return;
+
+  nav.style.display = 'flex';
+  scrollIndicator.style.display = 'block';
+
+  const dots = nav.querySelectorAll('.section-nav-dot');
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const target = document.getElementById(dot.dataset.target);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        dots.forEach(d => d.classList.toggle('active', d.dataset.target === id));
+      }
+    });
+  }, { root: stage6, threshold: 0.3 });
+
+  dots.forEach(dot => {
+    const el = document.getElementById(dot.dataset.target);
+    if (el) observer.observe(el);
+  });
+
+  stage6.addEventListener('scroll', () => {
+    const nearBottom = stage6.scrollTop + stage6.clientHeight >= stage6.scrollHeight - 80;
+    scrollIndicator.style.display = nearBottom ? 'none' : 'block';
+  });
 }
 
 function startAnalysisTimer() {
@@ -2658,6 +2782,7 @@ function generatePDF() {
   const sections = appState.analysisSections || parseAnalysisSections(appState.analysisRaw || appState.analysis || '');
 
   const sectionLabels = [
+    { key: 'ownWords',         label: 'YOUR OWN WORDS' },
     { key: 'unplanned',        label: "WHAT YOU DIDN'T PLAN TO WRITE" },
     { key: 'emotional',        label: 'THE EMOTIONAL FIELD UNDERNEATH' },
     { key: 'assumptions',      label: 'THE ASSUMPTIONS RUNNING YOUR STORY' },
@@ -2803,6 +2928,10 @@ function restartApp() {
   document.querySelectorAll('.timer-option').forEach((o, i) => {
     o.classList.toggle('selected', i === 0);
   });
+
+  // Reset section nav + scroll indicator
+  document.getElementById('section-nav').style.display = 'none';
+  document.getElementById('scroll-indicator').style.display = 'none';
 
   // Reset analysis UI
   document.getElementById('analysis-container').style.display = 'none';
@@ -3008,5 +3137,21 @@ document.querySelectorAll('.stage').forEach(s => {
   }
 })();
 </script>
+
+<div id="scroll-indicator" style="display:none;">
+  <div id="scroll-arrow">↓</div>
+</div>
+
+<nav id="section-nav" style="display:none;">
+  <div class="section-nav-dot active" data-target="sec-own-words" title="Your Own Words"></div>
+  <div class="section-nav-dot" data-target="sec-worldview" title="Worldview"></div>
+  <div class="section-nav-dot" data-target="sec-unplanned" title="What You Didn't Plan"></div>
+  <div class="section-nav-dot" data-target="sec-emotional" title="Emotional Field"></div>
+  <div class="section-nav-dot" data-target="sec-assumptions" title="Assumptions"></div>
+  <div class="section-nav-dot" data-target="sec-prerequisites" title="Must Be True"></div>
+  <div class="section-nav-dot" data-target="sec-warnings" title="Watch For"></div>
+  <div class="section-nav-dot" data-target="sec-absence" title="What's Missing"></div>
+  <div class="section-nav-dot" data-target="section-defaultNarrative" title="Default Narrative"></div>
+</nav>
 </body>
 </html>
