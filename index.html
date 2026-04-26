@@ -1214,7 +1214,7 @@
       </div>
     </div>
 
-    <button id="signal-continue" class="btn" disabled onclick="goToStage('stage-3-5')">Continue</button>
+    <button id="signal-continue" class="btn" disabled onclick="goToStage('stage-4'); initStory()">Continue</button>
   </div>
 </div>
 
@@ -1512,7 +1512,7 @@ if (appState.adminMode) {
 }
 
 // ─── STAGE ORDER ─────────────────────────────────
-const STAGES = ['stage-1','stage-2','stage-3-5','stage-4','stage-3','stage-5','stage-name','stage-6','stage-7','stage-8'];
+const STAGES = ['stage-1','stage-2','stage-4','stage-3','stage-5','stage-name','stage-6','stage-7','stage-8'];
 
 // ─── NAVIGATION ──────────────────────────────────
 function goToStage(id) {
@@ -1701,25 +1701,50 @@ function onSignalInput() {
 
 
 // ─── HEADLINE PLACEHOLDER CYCLING ───────────────
-const headlinePlaceholders = [
-  "Finally Stopped Circling",
-  "The Move I Actually Made",
-  "Smaller Than Expected, Better Than Planned",
-  "Back to Where I Should Be"
-];
 let hdlIdx = 0, hdlInterval = null, hdlFocused = false;
+
+function buildHeadlineExamples() {
+  const story = appState.story || '';
+  const signal = appState.signal || '';
+
+  const stopWords = new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','my','i','it','is','was','are','were','be','been','have','has','had','that','this','not','from','by','as','so','we','they','what','how','just','now','its','our','their','when','there','about','which','who','up','out','if','do','did','he','she','me','him','her','his','one','all','some','been','into','than','then','can','will','would','could','should','more','also','back','get','got','like','know','think','see','going','after','before','because','over','still','here','day','time','every']);
+
+  const words = story.toLowerCase()
+    .replace(/[^a-z\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 4 && !stopWords.has(w));
+
+  const freq = {};
+  words.forEach(w => freq[w] = (freq[w] || 0) + 1);
+  const topWords = Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([w]) => w.charAt(0).toUpperCase() + w.slice(1));
+
+  const topic = topWords[0] || signal.split(' ').slice(0, 2).join(' ') || 'This';
+  const topic2 = topWords[1] || 'Move';
+
+  return [
+    `Finally ${topic}`,
+    `The ${topic} I Actually Made`,
+    `${topic} and ${topic2}`,
+    `Smaller Than Expected, Better Than Planned`,
+    `Back to Where I Should Be`
+  ];
+}
 
 function startHeadlineCycle() {
   const el = document.getElementById('headline-placeholder');
+  const examples = buildHeadlineExamples();
   el.style.opacity = '1';
-  el.textContent   = headlinePlaceholders[hdlIdx];
+  el.textContent = examples[hdlIdx % examples.length];
   if (hdlInterval) return;
   hdlInterval = setInterval(() => {
     if (hdlFocused || appState.headline) return;
     el.style.opacity = '0';
     setTimeout(() => {
-      hdlIdx = (hdlIdx + 1) % headlinePlaceholders.length;
-      el.textContent   = headlinePlaceholders[hdlIdx];
+      hdlIdx = (hdlIdx + 1) % examples.length;
+      el.textContent = examples[hdlIdx];
       el.style.opacity = '1';
     }, 500);
   }, 3000);
