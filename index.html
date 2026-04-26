@@ -1237,63 +1237,7 @@
       </div>
     </div>
 
-    <button id="headline-continue" class="btn" disabled onclick="goToStage('stage-branch')">Choose your writing time</button>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════
-     STAGE BRANCH: PERSONAL / BUSINESS
-═══════════════════════════════════════════════ -->
-<div id="stage-branch" class="stage">
-  <div class="stage-content">
-    <h2>One question before you write.</h2>
-    <p class="stage-subtext">It changes what the story needs to surface.</p>
-    <div class="branch-buttons">
-      <button class="btn btn-primary" onclick="selectBranch('business')">This is a business idea</button>
-      <button class="btn btn-primary" onclick="selectBranch('personal')">This is a personal decision (career moves, life direction, relationships, big choices)</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════
-     STAGE BIZ: BUSINESS CONTEXT
-═══════════════════════════════════════════════ -->
-<div class="stage" id="stage-biz">
-  <div class="stage-content">
-
-    <h2 class="stage-heading">Four questions. Three minutes.</h2>
-    <p class="stage-subtext">Answer based on what you planned — not what you hope the story shows.</p>
-
-    <div class="biz-fields">
-
-      <div class="biz-field">
-        <label class="biz-label">Who specifically is this for?</label>
-        <p class="biz-helper">The person who needs this most — their job, situation, and what they're struggling with.</p>
-        <textarea class="biz-input" id="biz-icp" oninput="onBizInput()" placeholder="My customer is..."></textarea>
-      </div>
-
-      <div class="biz-field">
-        <label class="biz-label">How does someone discover this?</label>
-        <p class="biz-helper">Word of mouth? A post they read? A problem they Google? How does the right person find their way to you?</p>
-        <textarea class="biz-input" id="biz-method" oninput="onBizInput()" placeholder="They find out by..."></textarea>
-      </div>
-
-      <div class="biz-field">
-        <label class="biz-label">What does success look like for your customer?</label>
-        <p class="biz-helper">Not for you — for them. What's different about their life or work after working with you?</p>
-        <textarea class="biz-input" id="biz-destination" oninput="onBizInput()" placeholder="After working with me, they..."></textarea>
-      </div>
-
-      <div class="biz-field">
-        <label class="biz-label">What would they do if this didn't exist?</label>
-        <p class="biz-helper">The alternative they'd settle for — another tool, another person, doing nothing, figuring it out alone.</p>
-        <textarea class="biz-input" id="biz-competition" oninput="onBizInput()" placeholder="Without this, they'd..."></textarea>
-      </div>
-
-    </div>
-
-    <button id="biz-continue" onclick="submitBizContext()" disabled>Continue</button>
-
+    <button id="headline-continue" class="btn" disabled onclick="goToStage('stage-3-5')">Choose your writing time</button>
   </div>
 </div>
 
@@ -1364,6 +1308,28 @@
         <button id="questions-continue" class="btn hidden" onclick="handleQuestionsComplete()">Continue</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     STAGE NAME: NARRATIVE NAME
+═══════════════════════════════════════════════ -->
+<div id="stage-name" class="stage">
+  <div class="stage-content">
+    <h2>Give your narrative a name.</h2>
+    <p class="stage-subtext">Something short and memorable — a label you can refer back to. Not a description. A name.</p>
+
+    <div class="fill-blank">
+      <div class="fill-blank-input-wrapper">
+        <div class="fill-blank-placeholder" id="narrative-name-placeholder"></div>
+        <input type="text" id="narrative-name-input" style="min-height:0;padding:12px 16px;"
+          oninput="onNarrativeNameInput()"
+          onfocus="onNarrativeNameFocus()"
+          onblur="onNarrativeNameBlur()">
+      </div>
+    </div>
+
+    <button id="narrative-name-continue" class="btn" disabled onclick="handleNarrativeNameContinue()">Continue</button>
   </div>
 </div>
 
@@ -1529,18 +1495,14 @@ const appState = {
   headline: '',
   timerDuration: 10,
   story: '',
-  questions: ['', '', ''],
+  questions: [''],
   analysis: null,
   analysisRaw: '',
+  narrativeName: '',
   email: '',
   completionTime: null,
   currentStage: 'stage-1',
-  adminMode: false,
-  ideaType: '',
-  icp: '',
-  method: '',
-  destination: '',
-  competition: ''
+  adminMode: false
 };
 
 // ─── ADMIN DETECTION ─────────────────────────────
@@ -1550,7 +1512,7 @@ if (appState.adminMode) {
 }
 
 // ─── STAGE ORDER ─────────────────────────────────
-const STAGES = ['stage-1','stage-2','stage-3','stage-branch','stage-biz','stage-3-5','stage-4','stage-5','stage-6','stage-7','stage-8'];
+const STAGES = ['stage-1','stage-2','stage-3','stage-3-5','stage-4','stage-5','stage-name','stage-6','stage-7','stage-8'];
 
 // ─── NAVIGATION ──────────────────────────────────
 function goToStage(id) {
@@ -1605,6 +1567,7 @@ function adminSkip() {
   const next = STAGES[idx + 1];
   if (next === 'stage-4') initStory();
   if (next === 'stage-5') initQuestions();
+  if (next === 'stage-name') startNarrativeNameCycle();
   if (next === 'stage-6' || next === 'analysis') { savePartialRecord(); initAnalysis(); }
   if (next === 'stage-7') initReveal();
   goToStage(next);
@@ -1629,9 +1592,8 @@ async function testAnalyzeEndpoint() {
         idea: "test idea for admin check",
         headline: "Test Headline",
         story: "It is five years from now and my test idea worked. I am sitting at my desk feeling good about things. The work is going well and I have clients who appreciate what I do.",
-        ideaType: "personal",
-        icp: "", method: "", destination: "", competition: "",
-        q1: "just me", q2: "things stayed the same", q3: "money"
+        narrativeName: "The Safe Bet",
+        q1: "I didn't expect to feel relieved"
       })
     });
 
@@ -1672,7 +1634,6 @@ function adminSkipAnalysis() {
 }
 
 function adminPrefill() {
-  appState.ideaType = appState.ideaType || 'personal';
   appState.signal  = "I noticed fewer people in my building's lobby every morning this week.";
   appState.story   = `It's Tuesday, seven years from now, and I'm working from the corner of my bedroom — the standing desk I bought during the first wave of all this. The lobby thing I noticed turned out to be a leading indicator; within eighteen months, our entire floor was gone. Not the company, just the floor.
 
@@ -1781,39 +1742,6 @@ function onHeadlineInput() {
 }
 
 
-// ─── BRANCH ──────────────────────────────────────
-function selectBranch(type) {
-  appState.ideaType = type;
-  if (type === 'business') {
-    goToStage('stage-biz');
-  } else {
-    goToStage('stage-3-5');
-  }
-}
-
-function onBizInput() {
-  appState.icp         = document.getElementById('biz-icp').value;
-  appState.method      = document.getElementById('biz-method').value;
-  appState.destination = document.getElementById('biz-destination').value;
-  appState.competition = document.getElementById('biz-competition').value;
-  const btn = document.getElementById('biz-continue');
-  if (appState.adminMode) {
-    btn.disabled = false;
-  } else {
-    btn.disabled = !(
-      appState.icp.length > 10 &&
-      appState.method.length > 10 &&
-      appState.destination.length > 10 &&
-      appState.competition.length > 10
-    );
-  }
-}
-
-function submitBizContext() {
-  onBizInput();
-  goToStage('stage-3-5');
-}
-
 // ─── TIMER SELECT ────────────────────────────────
 function selectTimer(mins, el) {
   document.querySelectorAll('.timer-option').forEach(o => o.classList.remove('selected'));
@@ -1837,13 +1765,7 @@ function initStory() {
   const dur = appState.timerDuration;
   document.getElementById('story-timer').textContent = dur + ':00';
 
-  const headline = appState.headline || 'your idea';
-  let instruction;
-  if (appState.ideaType === 'business') {
-    instruction = `It's 5 years from now.\n\nThe thing you're circling has resolved. Not perfectly — but it resolved. You made the move, started the thing, committed to the direction. It's been long enough that the early chaos has settled and you can see clearly what you actually built — or chose — or became.\n\nWrite from first person. Present tense. As if you're living this Tuesday right now.\n\nWalk through your day. What does it look like? What's harder than you expected? What's easier? What surprised you about how it actually turned out?\n\nWho shows up — as a client, a collaborator, a critic? What do they want from you? What do you want from them?\n\nThe only rule: don't stop writing.\n\nDon't edit. Don't make it sound good. Don't write the version you'd put on LinkedIn. Write the version where you're actually living inside it.\n\nIf you get stuck, describe the room you're in. The story will come.`;
-  } else {
-    instruction = `It's 5 years from now.\n\nThe thing you're circling has resolved. Not perfectly — but it resolved. You made the move, started the thing, committed to the direction. It's been long enough that the early chaos has settled and you can see clearly what you actually built — or chose — or became.\n\nWrite from first person. Present tense. As if you're living this Tuesday right now.\n\nWalk through your day. What does it look like? What's harder than you expected? What's easier? What surprised you about how it actually turned out?\n\nThe only rule: don't stop writing.\n\nDon't edit. Don't make it sound good. Don't write the version you'd put on LinkedIn. Write the version where you're actually living inside it.\n\nIf you get stuck, describe the room you're in. The story will come.`;
-  }
+  const instruction = `It's 5 years from now.\n\nThe thing you're circling has resolved. Not perfectly — but it resolved. You made the move, started the thing, committed to the direction. It's been long enough that the early chaos has settled and you can see clearly what you actually built — or chose — or became.\n\nWrite from first person. Present tense. As if you're living this Tuesday right now.\n\nWalk through your day. What does it look like? What's harder than you expected? What's easier? What surprised you about how it actually turned out?\n\nThe only rule: don't stop writing.\n\nDon't edit. Don't make it sound good. Don't write the version you'd put on LinkedIn. Write the version where you're actually living inside it.\n\nIf you get stuck, describe the room you're in. The story will come.`;
   document.getElementById('story-instruction-text').textContent = instruction;
 
   // Init voice-to-text (hides button if unsupported)
@@ -2061,6 +1983,66 @@ function onQInput(n) {
 }
 
 
+// ─── NARRATIVE NAME STAGE ────────────────────────
+let narrativeNameIdx = 0, narrativeNameInterval = null, narrativeNameFocused = false;
+let narrativeNameExamples = [];
+
+function buildNarrativeNameExamples() {
+  const sig = appState.signal || 'my next move';
+  const words = sig.split(' ').filter(w => w.length > 3);
+  const topic = words.slice(0, 2).join(' ') || sig;
+  const year = new Date().getFullYear();
+  narrativeNameExamples = [
+    `My Goals for ${year}`,
+    `Leap of Faith in ${topic}`,
+    `How ${topic} Changes From Here`,
+    `The ${topic} Decision`,
+    `What I'm Building in ${year}`
+  ];
+}
+
+function startNarrativeNameCycle() {
+  buildNarrativeNameExamples();
+  const el = document.getElementById('narrative-name-placeholder');
+  el.style.opacity = '1';
+  el.textContent = narrativeNameExamples[narrativeNameIdx];
+  if (narrativeNameInterval) return;
+  narrativeNameInterval = setInterval(() => {
+    if (narrativeNameFocused || appState.narrativeName) return;
+    el.style.opacity = '0';
+    setTimeout(() => {
+      narrativeNameIdx = (narrativeNameIdx + 1) % narrativeNameExamples.length;
+      el.textContent = narrativeNameExamples[narrativeNameIdx];
+      el.style.opacity = '1';
+    }, 500);
+  }, 3000);
+}
+
+function onNarrativeNameFocus() {
+  narrativeNameFocused = true;
+  document.getElementById('narrative-name-placeholder').style.opacity = '0';
+}
+
+function onNarrativeNameBlur() {
+  if (!appState.narrativeName) {
+    narrativeNameFocused = false;
+    document.getElementById('narrative-name-placeholder').style.opacity = '1';
+  }
+}
+
+function onNarrativeNameInput() {
+  appState.narrativeName = document.getElementById('narrative-name-input').value;
+  document.getElementById('narrative-name-continue').disabled =
+    !appState.adminMode && appState.narrativeName.length < 3;
+}
+
+function handleNarrativeNameContinue() {
+  savePartialRecord();
+  goToStage('stage-6');
+  initAnalysis();
+}
+
+
 // ─── ANALYSIS STAGE ──────────────────────────────
 const loadingMsgs = [
   "Reading your story...",
@@ -2113,9 +2095,8 @@ async function savePartialRecord() {
 }
 
 async function handleQuestionsComplete() {
-  savePartialRecord(); // fire-and-forget
-  goToStage('stage-6');
-  initAnalysis();
+  goToStage('stage-name');
+  startNarrativeNameCycle();
 }
 
 async function initAnalysis() {
@@ -2146,29 +2127,21 @@ async function initAnalysis() {
   const state = appState;
   console.log("=== FRONTEND: CALLING /api/analyze ===");
   console.log("Payload:", JSON.stringify({
-    ideaType: state.ideaType,
     storyLength: state.story?.length,
     ideaLength: (state.signal)?.length,
-    hasIcp: !!state.icp,
-    hasQ1: !!state.questions?.[0]
+    hasQ1: !!state.questions?.[0],
+    hasNarrativeName: !!state.narrativeName
   }));
 
   fetch('/api/analyze', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      idea:        state.signal || "",
-      signal:      state.signal || "",
-      headline:    state.headline || "",
-      story:       state.story || "",
-      ideaType:    state.ideaType || "personal",
-      icp:         state.icp         || "",
-      method:      state.method      || "",
-      destination: state.destination || "",
-      competition: state.competition || "",
-      q1:          state.questions?.[0] || "",
-      q2:          state.questions?.[1] || "",
-      q3:          state.questions?.[2] || ""
+      idea:          state.signal || "",
+      headline:      state.headline || "",
+      story:         state.story || "",
+      narrativeName: state.narrativeName || "",
+      q1:            state.questions?.[0] || ""
     })
   })
   .then(async r => {
@@ -2808,17 +2781,13 @@ function restartApp() {
   appState.headline = '';
   appState.timerDuration = 10;
   appState.story = '';
-  appState.questions = ['', '', ''];
+  appState.questions = [''];
   appState.analysis = null;
   appState.analysisRaw = '';
   appState.analysisSections = null;
+  appState.narrativeName = '';
   appState.email = '';
   appState.completionTime = null;
-  appState.ideaType = '';
-  appState.icp = '';
-  appState.method = '';
-  appState.destination = '';
-  appState.competition = '';
 
   // Reset mic state
   micStopListening();
@@ -2843,7 +2812,6 @@ function restartApp() {
     .forEach(el => el.value = '');
   document.getElementById('signal-continue').disabled  = !adminMode;
   document.getElementById('headline-continue').disabled = !adminMode;
-  document.getElementById('biz-continue').disabled = !adminMode;
   document.getElementById('cta-confirmation').style.display = 'none';
 
   // Reset timer toggle
@@ -2861,9 +2829,16 @@ function restartApp() {
   document.querySelectorAll('.analysis-section').forEach(el => el.classList.remove('visible'));
 
   // Reset question visibility
-  document.getElementById('q2-item').classList.add('hidden');
-  document.getElementById('q3-item').classList.add('hidden');
   document.getElementById('questions-continue').classList.add('hidden');
+
+  // Reset narrative name
+  appState.narrativeName = '';
+  narrativeNameIdx = 0;
+  narrativeNameFocused = false;
+  clearInterval(narrativeNameInterval);
+  narrativeNameInterval = null;
+  document.getElementById('narrative-name-input').value = '';
+  document.getElementById('narrative-name-continue').disabled = true;
 
   // Reset signal/headline placeholder cycles
   sigIdx = 0; sigFocused = false;
@@ -3035,6 +3010,7 @@ const stageObs = new MutationObserver(mutations => {
     const el = m.target;
     if (el.id === 'stage-2' && el.classList.contains('active')) startSignalCycle();
     if (el.id === 'stage-3' && el.classList.contains('active')) startHeadlineCycle();
+    if (el.id === 'stage-name' && el.classList.contains('active')) startNarrativeNameCycle();
   }
 });
 document.querySelectorAll('.stage').forEach(s => {
@@ -3052,7 +3028,7 @@ document.querySelectorAll('.stage').forEach(s => {
     setTimeout(() => {
       document.getElementById('signal-continue').disabled  = false;
       document.getElementById('headline-continue').disabled = false;
-      document.getElementById('biz-continue').disabled = false;
+      document.getElementById('narrative-name-continue').disabled = false;
     }, 0);
   }
 })();
