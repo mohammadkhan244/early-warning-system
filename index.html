@@ -1214,7 +1214,7 @@
       </div>
     </div>
 
-    <button id="signal-continue" class="btn" disabled onclick="goToStage('stage-3')">Continue</button>
+    <button id="signal-continue" class="btn" disabled onclick="goToStage('stage-3-5')">Continue</button>
   </div>
 </div>
 
@@ -1237,7 +1237,7 @@
       </div>
     </div>
 
-    <button id="headline-continue" class="btn" disabled onclick="goToStage('stage-3-5')">Choose your writing time</button>
+    <button id="headline-continue" class="btn" disabled onclick="goToStage('stage-5'); initQuestions()">Continue</button>
   </div>
 </div>
 
@@ -1280,7 +1280,7 @@
     <div class="story-nudge" id="story-nudge"></div>
     <div class="story-bottom-bar">
       <span class="word-count" id="word-count">0 words</span>
-      <button id="finish-btn" class="btn hidden" onclick="goToStage('stage-5'); initQuestions()">Finish</button>
+      <button id="finish-btn" class="btn hidden" onclick="goToStage('stage-3')">Finish</button>
     </div>
   </div>
 </div>
@@ -1512,7 +1512,7 @@ if (appState.adminMode) {
 }
 
 // ─── STAGE ORDER ─────────────────────────────────
-const STAGES = ['stage-1','stage-2','stage-3','stage-3-5','stage-4','stage-5','stage-name','stage-6','stage-7','stage-8'];
+const STAGES = ['stage-1','stage-2','stage-3-5','stage-4','stage-3','stage-5','stage-name','stage-6','stage-7','stage-8'];
 
 // ─── NAVIGATION ──────────────────────────────────
 function goToStage(id) {
@@ -1839,8 +1839,7 @@ function tickStory() {
     // Auto-advance at hard max (15 min)
     if (storyElapsed >= 15 * 60) {
       clearInterval(storyTimerInt);
-      goToStage('stage-5');
-      initQuestions();
+      goToStage('stage-3');
     }
   }
 }
