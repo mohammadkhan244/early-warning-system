@@ -409,7 +409,7 @@
     .story-instruction p {
       font-family: Georgia, serif;
       font-size: 1.05rem;
-      color: #2a2a24;
+      color: rgba(240, 236, 228, 0.22);
       line-height: 1.9;
       white-space: pre-line;
       max-width: 540px;
@@ -488,10 +488,20 @@
       z-index: 9;
     }
     .story-pov-hint {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .pov-context {
+      font-size: clamp(11px, 1.5vw, 13px);
+      color: rgba(184, 115, 51, 0.6);
+      letter-spacing: 0.04em;
+    }
+    .pov-instruction {
       font-size: clamp(13px, 1.8vw, 15px);
-      color: rgba(184, 115, 51, 0.85);
-      letter-spacing: 0.06em;
-      font-weight: 500;
+      color: rgba(184, 115, 51, 0.9);
+      font-weight: 600;
+      letter-spacing: 0.04em;
     }
     .story-encourage {
       font-size: 0.7rem;
@@ -1435,7 +1445,10 @@
       <button id="mic-button" onclick="micButtonClick()">🎤 Speak your story</button>
     </div>
     <div class="story-subbar">
-      <span class="story-pov-hint">Write in 1st person — you, five years from now</span>
+      <div class="story-pov-hint">
+        <span class="pov-context">It's five years from now. What you're circling has resolved.</span>
+        <span class="pov-instruction">Write in 1st person — you, five years from now.</span>
+      </div>
       <span class="story-encourage" id="story-encourage"></span>
     </div>
     <div class="story-area">
