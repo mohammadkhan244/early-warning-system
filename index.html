@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>10-Minute Clarity Sprint — Modern Myths</title>
+  <title>Write Your Future — Modern Myths</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -206,10 +206,14 @@
       max-width: 520px;
     }
     .intro-disclaimer {
-      font-size: clamp(11px, 1.5vw, 13px);
-      color: rgba(240, 236, 228, 0.65);
+      font-family: Georgia, serif;
+      font-size: clamp(13px, 1.6vw, 15px);
+      color: rgba(240, 236, 228, 0.45);
+      line-height: 1.75;
       font-style: italic;
-      margin: 0;
+      max-width: 480px;
+      text-align: center;
+      margin-top: 20px;
     }
     .intro-body {
       font-size: clamp(13px, 1.8vw, 15px);
@@ -1356,14 +1360,15 @@
 ═══════════════════════════════════════════════ -->
 <div id="stage-1" class="stage">
   <div class="intro-content">
-    <h1>You already know. You just can't see it.</h1>
-    <p class="subhead">Ten minutes of unguarded writing surfaces what you've been circling — before it quietly makes the decision for you.</p>
+    <h1 class="intro-headline">There's a difference between knowing what you want and knowing what it feels like to already have it.</h1>
 
-    <div class="intro-body">
-      <p class="pull-quote">"I didn't plan to write that."</p>
-      <p class="instruction">Follow the steps in order. Don't think ahead.</p>
-    </div>
-    <button class="btn btn-primary intro-cta-button" onclick="goToStage('stage-2')">Start the sprint</button>
+    <p class="intro-subhead">Vision boards describe the future. Affirmations assert it. This puts you inside it.</p>
+
+    <p class="intro-subhead">It takes 10 minutes.</p>
+
+    <button class="btn btn-primary intro-cta-button" onclick="goToStage('stage-2')">Write your future</button>
+
+    <p class="intro-disclaimer">A marketer who's done manifestation courses for years said it was the first time she'd actually <em>inhabited</em> her future rather than described it. She could point to specific things in the story — tangible artifacts she'd lived on paper, not just bullet points.</p>
   </div>
 </div>
 
@@ -2979,7 +2984,7 @@ function generatePDF() {
   doc.text(today, W / 2, 136, { align: 'center' });
 
   cCopper(); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-  doc.text('10-Minute Clarity Sprint', W / 2, 148, { align: 'center' });
+  doc.text('Write Your Future — Modern Myths', W / 2, 148, { align: 'center' });
 
   cDim(); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
   doc.text('Modern Myths  |  Mohammad Khan', W / 2, H - 22, { align: 'center' });
@@ -3115,7 +3120,7 @@ function generatePDF() {
   const midY = H / 2;
 
   cCopper(); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-  doc.text('10-MINUTE CLARITY SPRINT', W / 2, midY - 26, { align: 'center' });
+  doc.text('WRITE YOUR FUTURE', W / 2, midY - 26, { align: 'center' });
 
   cDim(); doc.setFontSize(9); doc.setFont('times', 'italic');
   doc.text('The unexamined life isn\'t a philosophy problem. It\'s a ten-minute problem.', W / 2, midY - 14, { align: 'center' });
@@ -3129,7 +3134,7 @@ function generatePDF() {
   cDim(); doc.setFontSize(8);
   doc.text('Modern Myths  |  Mohammad Khan', W / 2, H - 22, { align: 'center' });
 
-  const filename = 'early-warning-system-' +
+  const filename = 'write-your-future-' +
     (appState.headline || 'report').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') +
     '.pdf';
   doc.save(filename);
