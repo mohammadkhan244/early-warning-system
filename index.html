@@ -1351,6 +1351,72 @@
       #section-nav { display: none !important; }
       #scroll-indicator { bottom: 24px; }
     }
+
+    /* ─── COOKIE JAR ─── */
+    #cookie-section {
+      margin-top: 52px;
+      text-align: center;
+      padding-top: 40px;
+      border-top: 1px solid #141410;
+    }
+    .cookie-jar-label {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #3a3a34;
+      margin-bottom: 6px;
+    }
+    .cookie-jar-sublabel {
+      font-size: 13px;
+      color: rgba(240,236,228,0.4);
+      font-style: italic;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    #cookie-jar-canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      display: block;
+      margin: 0 auto 20px;
+    }
+    .cookie-jar-count {
+      font-size: 11px;
+      color: #3a3a34;
+      letter-spacing: 0.1em;
+      margin-bottom: 20px;
+    }
+    #cookie-btn {
+      background: transparent;
+      border: 1px solid rgba(184,115,51,0.4);
+      color: #b87333;
+      font-size: 14px;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: Georgia, serif;
+      width: auto;
+      max-width: none;
+      min-height: auto;
+      display: inline-block;
+      margin: 0;
+    }
+    #cookie-btn:hover {
+      background: rgba(184,115,51,0.1);
+      border-color: #b87333;
+    }
+    .shelf-row {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .shelf-jar {
+      image-rendering: pixelated;
+      opacity: 0.4;
+    }
+    .shelf-jar.full { opacity: 1; }
   </style>
 </head>
 <body>
@@ -1632,6 +1698,22 @@
 
     <hr class="cta-divider">
     <button onclick="restartApp()">← Start over</button>
+
+    <div id="cookie-section">
+      <p class="cookie-jar-label">Support this project</p>
+      <p class="cookie-jar-sublabel">If this sprint was worth something to you,<br>add a cookie to the jar.</p>
+
+      <canvas id="cookie-jar-canvas" width="80" height="96"></canvas>
+      <div class="shelf-row" id="shelf-row"></div>
+      <p class="cookie-jar-count" id="cookie-jar-count"></p>
+
+      <a href="https://buy.stripe.com/4gM28rcaU98odjA5uh4wM02"
+         target="_blank"
+         id="cookie-btn"
+         onclick="handleCookieClick()">
+        🍪 Add a cookie to this jar
+      </a>
+    </div>
   </div>
 </div>
 
@@ -1675,7 +1757,8 @@ const appState = {
   email: '',
   completionTime: null,
   currentStage: 'stage-1',
-  adminMode: false
+  adminMode: false,
+  cookieCount: 0
 };
 
 // ─── ADMIN DETECTION ─────────────────────────────
@@ -3236,6 +3319,8 @@ function restartApp() {
   const s1 = document.getElementById('stage-1');
   s1.classList.add('active');
   window.scrollTo(0, 0);
+
+  renderCookieJar();
 }
 
 // ─── VOICE TO TEXT ───────────────────────────────
@@ -3378,6 +3463,190 @@ function wordCount(text) {
 }
 
 
+// ─── COOKIE JAR ──────────────────────────────────
+
+function drawCookieJar(cookieCount) {
+  const canvas = document.getElementById('cookie-jar-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const S = 4; // pixel size
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Color palette
+  const glass       = 'rgba(240,236,228,0.12)';
+  const glassBorder = 'rgba(240,236,228,0.35)';
+  const lidColor    = '#b87333';
+  const lidDark     = '#8a5520';
+  const cookieC     = '#c8853a';
+  const cookieDark  = '#9a6020';
+  const chipC       = '#4a2810';
+
+  // Draw jar body (pixel art)
+  const jarPixels = [
+    [0,0,0,1,1,1,1,1,1,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,0,0],
+    [0,1,1,0,0,0,0,0,0,1,1,0],
+    [0,1,0,0,0,0,0,0,0,0,1,0],
+    [0,1,0,0,0,0,0,0,0,0,1,0],
+    [0,1,0,0,0,0,0,0,0,0,1,0],
+    [0,1,0,0,0,0,0,0,0,0,1,0],
+    [0,1,0,0,0,0,0,0,0,0,1,0],
+    [0,1,0,0,0,0,0,0,0,0,1,0],
+    [0,1,0,0,0,0,0,0,0,0,1,0],
+    [0,1,0,0,0,0,0,0,0,0,1,0],
+    [0,1,0,0,0,0,0,0,0,0,1,0],
+    [0,0,1,1,1,1,1,1,1,1,0,0],
+    [0,0,0,1,1,1,1,1,1,0,0,0],
+  ];
+
+  // Jar border
+  jarPixels.forEach((row, y) => {
+    row.forEach((cell, x) => {
+      if (cell) {
+        ctx.fillStyle = glassBorder;
+        ctx.fillRect(x * S + 8, y * S + 20, S, S);
+      } else if (y >= 2 && y <= 11 && x >= 2 && x <= 9) {
+        ctx.fillStyle = glass;
+        ctx.fillRect(x * S + 8, y * S + 20, S, S);
+      }
+    });
+  });
+
+  // Draw cookies inside jar based on count (max 20 slots in 4 rows of 5)
+  const maxCookies = 20;
+  const filled = Math.min(cookieCount, maxCookies);
+  const rows = 4;
+  const cols = 4;
+
+  // Cookie positions inside jar (4x4 grid)
+  const cookiePositions = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      cookiePositions.push({
+        x: (c * 2 + 1) * S + 14,
+        y: (11 - r * 3) * S + 20 - r * 2
+      });
+    }
+  }
+
+  for (let i = 0; i < filled; i++) {
+    if (i >= cookiePositions.length) break;
+    const pos = cookiePositions[i];
+    ctx.fillStyle = cookieC;
+    ctx.fillRect(pos.x, pos.y, S * 2, S * 2);
+    ctx.fillStyle = cookieDark;
+    ctx.fillRect(pos.x, pos.y, S, S);
+    ctx.fillStyle = chipC;
+    ctx.fillRect(pos.x + S, pos.y + S, 2, 2);
+  }
+
+  // Lid
+  const lidPixels = [
+    [0,1,1,1,1,1,1,1,1,1,0],
+    [1,1,1,1,1,1,1,1,1,1,1],
+    [0,1,1,1,1,1,1,1,1,1,0],
+    [0,0,1,1,1,1,1,1,1,0,0],
+    [0,0,0,0,1,1,1,0,0,0,0],
+    [0,0,0,0,1,1,1,0,0,0,0],
+  ];
+  lidPixels.forEach((row, y) => {
+    row.forEach((cell, x) => {
+      if (cell) {
+        ctx.fillStyle = y === 0 ? lidDark : lidColor;
+        ctx.fillRect(x * S + 10, y * S + 2, S, S);
+      }
+    });
+  });
+}
+
+function drawShelfJar(canvas, full) {
+  const ctx = canvas.getContext('2d');
+  const S = 2;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const glassBorder = full ? 'rgba(184,115,51,0.9)' : 'rgba(240,236,228,0.2)';
+  const lidColor    = full ? '#b87333' : 'rgba(240,236,228,0.15)';
+
+  [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]].forEach((row, y) => {
+    row.forEach((cell, x) => {
+      if (cell) {
+        ctx.fillStyle = glassBorder;
+        ctx.fillRect(x * S + 2, y * S + 6, S, S);
+      }
+    });
+  });
+
+  ctx.fillStyle = lidColor;
+  ctx.fillRect(3, 2, 8, 3);
+}
+
+async function loadCookieCount() {
+  try {
+    const res = await fetch(SHEETS_URL, { method: 'GET' });
+    const data = await res.json();
+    if (typeof data.cookies === 'number') {
+      appState.cookieCount = data.cookies;
+    }
+  } catch(err) {
+    console.warn('Could not load cookie count:', err);
+    appState.cookieCount = 0;
+  }
+  renderCookieJar();
+}
+
+function renderCookieJar() {
+  const count = appState.cookieCount;
+  const max = 20;
+
+  drawCookieJar(count % max === 0 && count > 0 ? max : count % max);
+
+  const countEl = document.getElementById('cookie-jar-count');
+  if (countEl) {
+    if (count === 0) {
+      countEl.textContent = 'No cookies yet. Be the first.';
+    } else if (count < max) {
+      countEl.textContent = `${count} cookie${count !== 1 ? 's' : ''} in the jar`;
+    } else {
+      countEl.textContent = `${count} cookies — jar ${Math.floor(count / max)} on the shelf`;
+    }
+  }
+
+  const shelfRow = document.getElementById('shelf-row');
+  if (shelfRow) {
+    shelfRow.innerHTML = '';
+    const fullJars = Math.floor(count / max);
+    for (let i = 0; i < fullJars; i++) {
+      const c = document.createElement('canvas');
+      c.width = 16; c.height = 20;
+      c.className = 'shelf-jar full';
+      c.title = `Jar ${i + 1} — full`;
+      drawShelfJar(c, true);
+      shelfRow.appendChild(c);
+    }
+  }
+}
+
+function handleCookieClick() {
+  appState.cookieCount++;
+  renderCookieJar();
+
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ incrementCookie: true })
+  }).catch(err => console.warn('Cookie increment failed:', err));
+}
+
+// Check for ?cookie=true on page load
+(function checkCookieParam() {
+  if (new URLSearchParams(location.search).get('cookie') === 'true') {
+    history.replaceState({}, '', location.pathname + (appState.adminMode ? '?admin=true' : ''));
+    setTimeout(loadCookieCount, 500);
+  }
+})();
+
 // ─── MUTATION OBSERVER: start placeholder cycles ─
 const stageObs = new MutationObserver(mutations => {
   for (const m of mutations) {
@@ -3404,6 +3673,8 @@ document.querySelectorAll('.stage').forEach(s => {
       document.getElementById('headline-continue').disabled = false;
     }, 0);
   }
+
+  loadCookieCount();
 })();
 </script>
 
