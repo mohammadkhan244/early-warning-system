@@ -1620,7 +1620,9 @@
     </div>
 
     <button class="btn btn-primary" onclick="handleReport()">Send my report</button>
-    <p class="cta-confirmation" id="cta-confirmation">Your report is downloading.</p>
+    <p class="cta-confirmation" id="cta-confirmation">
+      Your report is downloading. Check your inbox — and your spam folder if you don't see it within a few minutes. Subject line: <em>Your Write Your Future report is here</em>
+    </p>
 
     <hr class="cta-divider">
 
@@ -2873,10 +2875,15 @@ async function handleReport() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: state.email,
-        headline: state.headline || "",
-        idea: state.idea || state.signal || "",
-        analysis: state.analysisRaw || "",
-        story: state.story || ""
+        headline: state.headline || '',
+        idea: state.signal || '',
+        story: state.story || '',
+        timerDuration: state.timerDuration || 10,
+        ownWordsQuote: (() => {
+          const raw = state.analysisSections?.ownWords || '';
+          const match = raw.match(/^"([^"]+)"/);
+          return match ? match[1] : '';
+        })()
       })
     })
     .then(r => r.json())
