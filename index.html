@@ -629,6 +629,17 @@
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
+    .radar-dot {
+      fill: #b87333;
+      fill-opacity: 0;
+      filter: url(#rdot-glow);
+      animation: radar-dot-appear 0.7s ease-out forwards;
+    }
+    @keyframes radar-dot-appear {
+      0%   { fill-opacity: 0; }
+      18%  { fill-opacity: 1; }
+      100% { fill-opacity: 0.6; }
+    }
 
     .loading-message {
       font-family: Georgia, serif;
@@ -1594,11 +1605,27 @@
     <div id="radar-loading" style="text-align:center; width:100%;">
       <div class="radar-container">
         <svg id="radar-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="rdot-glow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="2" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
           <!-- Concentric rings -->
           <circle cx="100" cy="100" r="24" class="radar-circle"/>
           <circle cx="100" cy="100" r="48" class="radar-circle"/>
           <circle cx="100" cy="100" r="72" class="radar-circle"/>
           <circle cx="100" cy="100" r="96" class="radar-circle-outer"/>
+          <!-- Blips — one per analysis section, appear when sweep first passes -->
+          <circle class="radar-dot" cx="120" cy="57"  r="2.5" style="animation-delay:0.28s"/>
+          <circle class="radar-dot" cx="122" cy="90"  r="2.5" style="animation-delay:0.72s"/>
+          <circle class="radar-dot" cx="172" cy="94"  r="2.5" style="animation-delay:0.94s"/>
+          <circle class="radar-dot" cx="137" cy="131" r="2.5" style="animation-delay:1.44s"/>
+          <circle class="radar-dot" cx="119" cy="170" r="2.5" style="animation-delay:1.83s"/>
+          <circle class="radar-dot" cx="86"  cy="120" r="2.5" style="animation-delay:2.39s"/>
+          <circle class="radar-dot" cx="31"  cy="119" r="2.5" style="animation-delay:2.83s"/>
+          <circle class="radar-dot" cx="58"  cy="76"  r="2.5" style="animation-delay:3.33s"/>
+          <circle class="radar-dot" cx="81"  cy="31"  r="2.5" style="animation-delay:3.83s"/>
           <!-- Rotating sweep -->
           <g class="radar-sweep-group">
             <!-- Trailing fade sectors -->
