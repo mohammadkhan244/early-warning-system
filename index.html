@@ -3472,7 +3472,7 @@ function micStartListening(SR) {
     }
   };
   _micRecognition.onend = () => {
-    if (_micListening) _micRecognition.start(); // auto-restart
+    if (_micListening) micStartListening(SR); // fresh instance prevents Android duplicate-result bug
   };
   _micRecognition.onerror = (e) => {
     if (e.error === 'no-speech') return;
