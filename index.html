@@ -3421,7 +3421,7 @@ function micShowTestPrompt(SR) {
     const el = document.getElementById('mic-test-output');
     if (!el) return;
     if (e.error === 'network') {
-      el.innerHTML = 'Speech recognition couldn\'t reach Google\'s servers.<br><span style="font-size:12px;opacity:0.6">This is a Chrome/network issue — try a different network, disable VPN, or use the keyboard instead.</span>';
+      el.innerHTML = 'Speech recognition couldn\'t reach Google\'s servers.<br><span style="font-size:12px;opacity:0.6">On Edge, try: Settings → Privacy → Tracking prevention → turn off, or switch to Chrome. Also try disabling VPN.</span>';
     } else if (e.error === 'not-allowed' || e.error === 'permission-denied') {
       el.textContent = 'Microphone access denied — check your browser permissions and reload.';
     } else if (e.error === 'audio-capture') {
