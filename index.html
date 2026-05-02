@@ -633,12 +633,15 @@
       fill: #b87333;
       fill-opacity: 0;
       filter: url(#rdot-glow);
-      animation: radar-dot-appear 0.7s ease-out forwards;
+      animation: radar-blip 4s linear infinite;
     }
-    @keyframes radar-dot-appear {
-      0%   { fill-opacity: 0; }
-      18%  { fill-opacity: 1; }
-      100% { fill-opacity: 0.6; }
+    @keyframes radar-blip {
+      0%   { fill-opacity: 1;    }  /* sweep hits — bright flash */
+      8%   { fill-opacity: 0.82; }
+      35%  { fill-opacity: 0.25; }  /* phosphor decay */
+      70%  { fill-opacity: 0.07; }
+      94%  { fill-opacity: 0.01; }  /* nearly gone */
+      100% { fill-opacity: 1;    }  /* sweep returns — instant re-flash */
     }
 
     .loading-message {
@@ -3448,7 +3451,7 @@ function micShowTestPrompt(SR) {
     const el = document.getElementById('mic-test-output');
     if (!el) return;
     if (e.error === 'network') {
-      el.innerHTML = 'Speech recognition couldn\'t reach Google\'s servers.<br><span style="font-size:12px;opacity:0.6">On Edge, try: Settings → Privacy → Tracking prevention → turn off, or switch to Chrome. Also try disabling VPN.</span>';
+      el.innerHTML = 'Voice input requires Chrome — Edge blocks the speech server.<br><span style="font-size:12px;opacity:0.6">Use the keyboard instead, or open this page in Chrome where voice works reliably.</span>';
     } else if (e.error === 'not-allowed' || e.error === 'permission-denied') {
       el.textContent = 'Microphone access denied — check your browser permissions and reload.';
     } else if (e.error === 'audio-capture') {
