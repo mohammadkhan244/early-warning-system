@@ -1796,6 +1796,12 @@
 
     <div id="report-content" style="display:none; margin-top:32px; text-align:left; font-family:Georgia,serif;">
       <div id="report-text"></div>
+      <div style="text-align:center; margin-top:24px; padding-top:20px; border-top:1px solid rgba(184,115,51,0.15);">
+        <button onclick="generateNarrativePDF(appState.narrativeReport)"
+                style="background:transparent; color:#b87333; border:1px solid rgba(184,115,51,0.5); padding:10px 22px; border-radius:4px; font-size:13px; cursor:pointer; letter-spacing:0.04em;">
+          ↓ Download as PDF
+        </button>
+      </div>
     </div>
 
     <div class="stage-8-bottom">
@@ -1860,6 +1866,7 @@ const appState = {
   headlineExamples: null,
   analysis: null,
   analysisRaw: '',
+  narrativeReport: '',
   email: '',
   completionTime: null,
   currentStage: 'stage-1',
@@ -1941,6 +1948,7 @@ function goToStage(id) {
     if (id !== 'stage-6') {
       document.getElementById('analysis-progress-wrap').style.display = 'none';
     }
+    if (id === 'stage-8') buildReportTeaser();
     updateAdmin();
     buildAdminActions();
   }, 350);
@@ -3357,6 +3365,153 @@ function generatePDF() {
 }
 
 
+// ─── NARRATIVE REPORT PDF ────────────────────────
+function generateNarrativePDF(reportText) {
+  if (!window.jspdf) { console.warn('jsPDF not loaded'); return; }
+  if (!reportText) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+
+  const W = 210, H = 297, M = 20, CW = 170;
+  const BODY_LH = 5, LABEL_H = 7, SEC_GAP = 8;
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const cDark   = () => doc.setTextColor(240, 236, 228);
+  const cCopper = () => doc.setTextColor(184, 115, 51);
+  const cDim    = () => doc.setTextColor(80, 80, 74);
+  const cMid    = () => doc.setTextColor(110, 106, 100);
+  const bg      = () => { doc.setFillColor(10, 10, 10); doc.rect(0, 0, W, H, 'F'); };
+
+  function textH(text, width, lh) {
+    if (!text) return lh;
+    return doc.splitTextToSize(text.replace(/\*\*/g, ''), width).length * lh;
+  }
+
+  function renderBold(text, x, y, maxW, fontSize, lh, fontFam) {
+    if (!text) return y;
+    const segments = text.split('**');
+    const tokens = [];
+    for (let i = 0; i < segments.length; i++) {
+      const bold = i % 2 === 1;
+      const parts = segments[i].split('\n');
+      for (let pi = 0; pi < parts.length; pi++) {
+        if (pi > 0) tokens.push({ t: '\n', b: false });
+        const words = parts[pi].split(' ');
+        for (let wi = 0; wi < words.length; wi++) {
+          if (wi > 0) tokens.push({ t: ' ', b: false });
+          if (words[wi]) tokens.push({ t: words[wi], b: bold });
+        }
+      }
+    }
+    function tw(tok) {
+      doc.setFont(fontFam, tok.b ? 'bold' : 'normal');
+      doc.setFontSize(fontSize);
+      return doc.getStringUnitWidth(tok.t) * fontSize / doc.internal.scaleFactor;
+    }
+    const lines = [[]];
+    let lineW = 0;
+    for (const tok of tokens) {
+      if (tok.t === '\n') { lines.push([]); lineW = 0; continue; }
+      const w = tw(tok);
+      if (tok.t === ' ') { if (lineW > 0) { lines[lines.length - 1].push(tok); lineW += w; } continue; }
+      if (lineW > 0 && lineW + w > maxW) { lines.push([]); lineW = 0; }
+      lines[lines.length - 1].push(tok);
+      lineW += w;
+    }
+    for (const line of lines) {
+      while (line.length && line[line.length - 1].t === ' ') line.pop();
+      let cx = x;
+      for (const tok of line) {
+        doc.setFont(fontFam, tok.b ? 'bold' : 'normal');
+        doc.setFontSize(fontSize);
+        doc.text(tok.t, cx, y);
+        cx += tw(tok);
+      }
+      y += lh;
+    }
+    return y;
+  }
+
+  // ── COVER ──
+  bg();
+  doc.setFillColor(184, 115, 51); doc.rect(M, 40, 25, 0.4, 'F');
+  cDim(); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+  doc.text('DEFAULT NARRATIVE REPORT', M, 52);
+  cDark(); doc.setFontSize(24); doc.setFont('times', 'bold');
+  const hlLines = doc.splitTextToSize(appState.headline || 'Your Default Narrative', CW);
+  doc.text(hlLines, W / 2, 112, { align: 'center' });
+  cDim(); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+  doc.text(today, W / 2, 136, { align: 'center' });
+  cCopper(); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+  doc.text('Write Your Future — Modern Myths', W / 2, 148, { align: 'center' });
+  cDim(); doc.setFontSize(8);
+  doc.text('Modern Myths  |  Mohammad Khan', W / 2, H - 22, { align: 'center' });
+
+  // ── SECTIONS ──
+  const chunks = reportText.split(/\n(?=## )/);
+  for (const chunk of chunks) {
+    if (!chunk.trim()) continue;
+    doc.addPage(); bg();
+    let y = M + 5;
+
+    const hMatch = chunk.match(/^## (.+)/);
+    const header = hMatch ? hMatch[1].trim() : '';
+    const body   = chunk.replace(/^## .+\n?/, '').trim();
+
+    if (header) {
+      cCopper(); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+      const hLines = doc.splitTextToSize(header, CW);
+      doc.text(hLines, M, y);
+      y += hLines.length * LABEL_H;
+      doc.setFillColor(184, 115, 51); doc.rect(M, y, 25, 0.4, 'F');
+      y += 6;
+    }
+
+    const paras = body.split(/\n\n+/);
+    for (const para of paras) {
+      const t = para.trim();
+      if (!t) continue;
+      const boldOnly = t.match(/^\*\*(.+?)\*\*\.?$/);
+      const isQuote  = t.startsWith('"') && t.endsWith('"');
+      const needed   = textH(t, CW, BODY_LH) + SEC_GAP;
+      if (y + needed > H - M) { doc.addPage(); bg(); y = M + 5; }
+
+      if (boldOnly) {
+        cCopper(); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        const bl = doc.splitTextToSize(boldOnly[1], CW);
+        doc.text(bl, M, y); y += bl.length * BODY_LH + 4;
+      } else if (isQuote) {
+        cDim(); doc.setFontSize(9); doc.setFont('times', 'italic');
+        const ql = doc.splitTextToSize(t, CW);
+        doc.text(ql, M, y); y += ql.length * BODY_LH + SEC_GAP;
+      } else {
+        cMid();
+        y = renderBold(t, M, y, CW, 9, BODY_LH, 'times');
+        y += SEC_GAP;
+      }
+    }
+  }
+
+  // ── BACK COVER ──
+  doc.addPage(); bg();
+  const midY = H / 2;
+  cCopper(); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+  doc.text('WRITE YOUR FUTURE', W / 2, midY - 26, { align: 'center' });
+  cDim(); doc.setFontSize(9); doc.setFont('times', 'italic');
+  doc.text("The unexamined life isn't a philosophy problem. It's a ten-minute conversation.", W / 2, midY - 14, { align: 'center' });
+  cDark(); doc.setFontSize(18); doc.setFont('times', 'bold');
+  doc.text('One session. 90 minutes. $500.', W / 2, midY - 1, { align: 'center' });
+  cDim(); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  doc.text('tidycal.com/mohammadukhan135/uncover-your-myth', W / 2, midY + 8, { align: 'center' });
+  cDim(); doc.setFontSize(8);
+  doc.text('Modern Myths  |  Mohammad Khan', W / 2, H - 22, { align: 'center' });
+
+  const filename = 'default-narrative-' +
+    (appState.headline || 'report').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') + '.pdf';
+  doc.save(filename);
+}
+
+
 // ─── RESTART ─────────────────────────────────────
 function restartApp() {
   const adminMode = appState.adminMode; // preserve across restart
@@ -3369,6 +3524,7 @@ function restartApp() {
   appState.questions = [''];
   appState.analysis = null;
   appState.analysisRaw = '';
+  appState.narrativeReport = '';
   appState.analysisSections = null;
   appState.email = '';
   appState.completionTime = null;
@@ -3539,8 +3695,12 @@ async function generateNarrativeReport() {
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
 
+    appState.narrativeReport = data.report;
+
     document.getElementById('report-generating').style.display = 'none';
     document.getElementById('report-content').style.display    = 'block';
+
+    generateNarrativePDF(data.report);
 
     const html = data.report
       .replace(/^## (.+)$/gm, '<h2 style="font-size:13px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#b87333;margin:36px 0 14px;padding-bottom:8px;border-bottom:1px solid rgba(184,115,51,0.3);">$1</h2>')
