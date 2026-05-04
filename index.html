@@ -3125,8 +3125,8 @@ function generatePDF() {
   // ── Color helpers ──
   const cDark   = () => doc.setTextColor(240, 236, 228);
   const cCopper = () => doc.setTextColor(184, 115, 51);
-  const cDim    = () => doc.setTextColor(80, 80, 74);
-  const cMid    = () => doc.setTextColor(110, 106, 100);
+  const cDim    = () => doc.setTextColor(170, 166, 158);
+  const cMid    = () => doc.setTextColor(225, 221, 213);
   const bg      = () => { doc.setFillColor(10, 10, 10); doc.rect(0, 0, W, H, 'F'); };
 
   // ── Measure plain-text height ──
@@ -3378,8 +3378,8 @@ function generateNarrativePDF(reportText) {
 
   const cDark   = () => doc.setTextColor(240, 236, 228);
   const cCopper = () => doc.setTextColor(184, 115, 51);
-  const cDim    = () => doc.setTextColor(80, 80, 74);
-  const cMid    = () => doc.setTextColor(110, 106, 100);
+  const cDim    = () => doc.setTextColor(170, 166, 158);
+  const cMid    = () => doc.setTextColor(225, 221, 213);
   const bg      = () => { doc.setFillColor(10, 10, 10); doc.rect(0, 0, W, H, 'F'); };
 
   function textH(text, width, lh) {
