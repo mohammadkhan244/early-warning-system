@@ -2317,10 +2317,13 @@ function onSignalBlur() {
     document.getElementById('signal-placeholder').style.opacity = '1';
   }
 }
+let _signalSaveTimer = null;
 function onSignalInput() {
   appState.signal = document.getElementById('signal-input').value;
   const btn = document.getElementById('signal-continue');
   btn.disabled = appState.adminMode ? false : appState.signal.trim().length === 0;
+  clearTimeout(_signalSaveTimer);
+  _signalSaveTimer = setTimeout(saveSessionToStorage, 1000);
 }
 
 
@@ -2441,6 +2444,7 @@ function onHeadlineBlur() {
     document.getElementById('headline-placeholder').style.opacity = '1';
   }
 }
+let _headlineSaveTimer = null;
 function onHeadlineInput() {
   appState.headline = document.getElementById('headline-input').value;
   const btn = document.getElementById('headline-continue');
@@ -2450,6 +2454,8 @@ function onHeadlineInput() {
     hdlInterval = null;
     document.getElementById('headline-placeholder').style.opacity = '0';
   }
+  clearTimeout(_headlineSaveTimer);
+  _headlineSaveTimer = setTimeout(saveSessionToStorage, 1000);
 }
 
 
@@ -3964,21 +3970,21 @@ function restoreSessionOnLoad() {
       localStorage.removeItem('wyfSession');
       return;
     }
-    // Only restore if meaningful progress was made
-    if (!saved.story && !saved.analysisRaw) return;
+    // Restore if any meaningful field is present
+    if (!saved.signal && !saved.story && !saved.analysisRaw) return;
 
-    appState.signal        = saved.signal        || '';
-    appState.headline      = saved.headline      || '';
-    appState.story         = saved.story         || '';
-    appState.analysisRaw   = saved.analysisRaw   || '';
-    appState.timerDuration = saved.timerDuration || 10;
-    appState.questions     = saved.questions     || [''];
+    appState.signal          = saved.signal          || '';
+    appState.headline        = saved.headline        || '';
+    appState.story           = saved.story           || '';
+    appState.analysisRaw     = saved.analysisRaw     || '';
+    appState.timerDuration   = saved.timerDuration   || 10;
+    appState.questions       = saved.questions       || [''];
     appState.email           = saved.email           || '';
     appState.stage           = saved.stage           || 'early';
     appState.lens            = saved.lens            || '';
     appState.questionVariant = saved.questionVariant || 'standard';
 
-    const stage = saved.currentStage || 'stage-1';
+    const savedStage = saved.currentStage || 'stage-1';
 
     if (saved.analysisRaw) {
       // Restore to analysis stage — make all sections immediately visible
@@ -3991,24 +3997,23 @@ function restoreSessionOnLoad() {
         clearInterval(analysisTimerInt);
         document.getElementById('analysis-continue').classList.remove('hidden');
         document.getElementById('report-locked').style.display = 'block';
-        // If they had reached stage 7 or 8, take them there
-        if (stage === 'stage-7' || stage === 'stage-8') {
-          setTimeout(() => goToStage(stage), 100);
+        // If they reached stage 7, 7.5, or 8 — take them there
+        if (['stage-7','stage-7-5','stage-8'].includes(savedStage)) {
+          setTimeout(() => goToStage(savedStage), 100);
         }
       }, 450);
+
     } else if (saved.story) {
-      const savedStage = saved.currentStage || 'stage-4';
       if (savedStage === 'stage-5') {
-        // Restore to questions stage — story is written, question not yet answered
+        // Restore to questions stage
         goToStage('stage-5');
         setTimeout(() => {
           document.getElementById('questions-story-text').textContent = appState.story;
           initQuestions();
-          // Pre-fill question answer if saved
           const q1 = appState.questions?.[0];
           if (q1) {
             const inp = document.getElementById('q1-input');
-            if (inp) { inp.value = q1; }
+            if (inp) inp.value = q1;
             document.getElementById('questions-continue').classList.remove('hidden');
           }
         }, 450);
@@ -4018,6 +4023,27 @@ function restoreSessionOnLoad() {
         setTimeout(() => {
           const ta = document.getElementById('story-textarea');
           if (ta) { ta.value = saved.story; ta.dispatchEvent(new Event('input')); }
+        }, 450);
+      }
+
+    } else if (saved.signal) {
+      // Pre-story stages — restore to signal or headline stage
+      if (saved.headline && saved.headline.length >= 3 &&
+          ['stage-3','stage-4-5'].includes(savedStage)) {
+        // Had a headline — restore to headline stage
+        goToStage('stage-3');
+        setTimeout(() => {
+          const sigEl = document.getElementById('signal-input');
+          if (sigEl) { sigEl.value = appState.signal; sigEl.dispatchEvent(new Event('input')); }
+          const hdlEl = document.getElementById('headline-input');
+          if (hdlEl) { hdlEl.value = appState.headline; hdlEl.dispatchEvent(new Event('input')); }
+        }, 450);
+      } else {
+        // Just signal — restore to stage-2
+        goToStage('stage-2');
+        setTimeout(() => {
+          const el = document.getElementById('signal-input');
+          if (el) { el.value = appState.signal; el.dispatchEvent(new Event('input')); }
         }, 450);
       }
     }
