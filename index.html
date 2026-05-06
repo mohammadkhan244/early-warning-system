@@ -350,6 +350,101 @@
       border-color: #b87333;
     }
     .timer-option:hover:not(:disabled) { background-color: #7a4a22; color: #ffffff; }
+    /* ─── STAGE 4.5: CALIBRATION ─── */
+    .stage-radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .stage-radio-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 20px;
+      border: 1px solid rgba(240,236,228,0.18);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      user-select: none;
+    }
+    .stage-radio-option .radio-label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stage-radio-option .radio-label strong {
+      color: #f0ece4;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .stage-radio-option .radio-label span {
+      color: rgba(240,236,228,0.6);
+      font-size: 0.82rem;
+    }
+    .stage-radio-option.selected {
+      border-color: #b87333;
+      background: rgba(184,115,51,0.08);
+    }
+    .stage-radio-option:hover:not(.selected) {
+      border-color: rgba(240,236,228,0.35);
+    }
+
+    /* ─── STAGE 7.5: FEEDBACK ─── */
+    .stage-7-5-layout {
+      display: flex;
+      gap: 48px;
+      width: 100%;
+      max-width: 960px;
+    }
+    .feedback-left {
+      flex: 1;
+      min-width: 0;
+    }
+    .feedback-right {
+      flex: 1;
+      min-width: 0;
+    }
+    .feedback-excerpt-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(240,236,228,0.4);
+      margin-bottom: 12px;
+    }
+    .feedback-excerpt {
+      font-size: 0.88rem;
+      color: rgba(240,236,228,0.75);
+      line-height: 1.65;
+      border-left: 2px solid rgba(184,115,51,0.35);
+      padding-left: 16px;
+      max-height: 420px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .rating-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .rating-label {
+      font-size: 0.88rem;
+      color: rgba(240,236,228,0.8);
+    }
+    .star-group {
+      display: flex;
+      gap: 4px;
+    }
+    .star {
+      font-size: 1.6rem;
+      color: rgba(240,236,228,0.2);
+      cursor: pointer;
+      transition: color 0.15s;
+      line-height: 1;
+    }
+    .star.active { color: #b87333; }
+
     .timer-note {
       font-size: 0.83rem;
       color: rgba(240, 236, 228, 0.9);
@@ -1090,9 +1185,11 @@
     /* Long stages: top-aligned (align-items fixes the flex overflow bug where
        centered content starts above the scroll origin) */
     #stage-biz,
+    #stage-4-5,
     #stage-5,
     #stage-6,
     #stage-7,
+    #stage-7-5,
     #stage-8 {
       align-items: flex-start;
       justify-content: center;
@@ -1257,6 +1354,8 @@
       #stage-5 .questions-panel { padding: 24px 16px; }
       #stage-6 .stage-content { padding: 24px 16px; }
       #stage-8 .stage-content { padding: 10px 16px 48px; }
+      .stage-7-5-layout { flex-direction: column; gap: 24px; }
+      .feedback-left { display: none; }
 
       h1 { font-size: clamp(22px, 7vw, 30px); }
       h2 { font-size: clamp(20px, 6vw, 26px); }
@@ -1539,7 +1638,46 @@
       </div>
     </div>
 
-    <button id="headline-continue" class="btn" disabled onclick="goToStage('stage-5'); initQuestions()">Continue</button>
+    <button id="headline-continue" class="btn" disabled onclick="goToStage('stage-4-5')">Continue</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     STAGE 4.5: CALIBRATION
+═══════════════════════════════════════════════ -->
+<div id="stage-4-5" class="stage">
+  <div class="stage-content">
+    <button class="back-link" onclick="goBack()">← back</button>
+    <h2>Where are you with this?</h2>
+    <p class="stage-subtext">This helps the analysis meet you where you actually are — not where you think you should be.</p>
+
+    <div class="stage-radio-group">
+      <label class="stage-radio-option" id="radio-early" onclick="selectStageRadio('early')">
+        <div class="radio-label">
+          <strong>Just starting to think about it</strong>
+          <span>I'm still exploring — nothing's settled yet</span>
+        </div>
+      </label>
+      <label class="stage-radio-option" id="radio-mid" onclick="selectStageRadio('mid')">
+        <div class="radio-label">
+          <strong>In the middle of it</strong>
+          <span>I've been working on this — I have some sense of the shape</span>
+        </div>
+      </label>
+      <label class="stage-radio-option" id="radio-deep" onclick="selectStageRadio('deep')">
+        <div class="radio-label">
+          <strong>Deep in it</strong>
+          <span>I know a lot about this space — I want confirmation, not just discovery</span>
+        </div>
+      </label>
+    </div>
+
+    <div style="margin-top:28px;">
+      <p class="stage-subtext" style="margin-bottom:8px;">Any lens, worldview, or framework you bring to this? <em style="opacity:0.6;">(optional)</em></p>
+      <textarea id="lens-input" class="question-input" rows="3" placeholder="e.g. I think about this through a systems lens, or I come from a design background..." oninput="appState.lens = this.value" style="width:100%; box-sizing:border-box;"></textarea>
+    </div>
+
+    <button id="calibration-continue" class="btn" disabled onclick="onStage45Continue()">Continue</button>
   </div>
 </div>
 
@@ -1742,7 +1880,50 @@
     <p class="reveal-paragraph" id="reveal-para">Whatever you found — you found it because you wrote it before you could think about whether to write it. The analytical mind performs. The story reveals.</p>
     <p class="reveal-paragraph" id="reveal-default-narrative">What all of it has in common: there was a story running underneath it. Not the idea you were testing. Not the decision you were circling. The story about who you are and what's available to you that was making decisions before you could examine it. That's your Default Narrative. You just found evidence of yours.</p>
     <div class="reveal-btn" id="reveal-btn">
-      <button class="btn btn-primary" onclick="goToStage('stage-8'); buildReportTeaser()">Get your clarity report</button>
+      <button class="btn btn-primary" onclick="goToStage('stage-7-5'); initFeedback()">Get your clarity report</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     STAGE 7.5: FEEDBACK
+═══════════════════════════════════════════════ -->
+<div id="stage-7-5" class="stage">
+  <div class="stage-content stage-7-5-layout">
+    <div class="feedback-left">
+      <div class="feedback-excerpt-label">From your analysis</div>
+      <div class="feedback-excerpt" id="feedback-excerpt"></div>
+    </div>
+    <div class="feedback-right">
+      <button class="back-link" onclick="goBack()">← back</button>
+      <h2>Before you see the report</h2>
+      <p class="stage-subtext">One minute. What did the analysis get right?</p>
+
+      <div class="rating-row">
+        <span class="rating-label">How accurate was the analysis?</span>
+        <div class="star-group" id="star-group">
+          <span class="star" onclick="setRating(1)">★</span>
+          <span class="star" onclick="setRating(2)">★</span>
+          <span class="star" onclick="setRating(3)">★</span>
+          <span class="star" onclick="setRating(4)">★</span>
+          <span class="star" onclick="setRating(5)">★</span>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <p class="stage-subtext" style="margin-bottom:6px;">What felt most true?</p>
+        <textarea class="question-input" id="feedback-liked" rows="3" placeholder="The part about..." oninput="appState.feedbackLiked = this.value" style="width:100%; box-sizing:border-box;"></textarea>
+      </div>
+
+      <div style="margin-top:16px;">
+        <p class="stage-subtext" style="margin-bottom:6px;">What missed the mark?</p>
+        <textarea class="question-input" id="feedback-wish" rows="3" placeholder="It didn't account for..." oninput="appState.feedbackWish = this.value" style="width:100%; box-sizing:border-box;"></textarea>
+      </div>
+
+      <div style="margin-top:24px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="submitFeedback()">Submit &amp; see report</button>
+        <button class="back-link" style="cursor:pointer;" onclick="goToStage('stage-8'); buildReportTeaser()">Skip →</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1873,7 +2054,13 @@ const appState = {
   completionTime: null,
   currentStage: 'stage-1',
   adminMode: false,
-  cookieCount: 0
+  cookieCount: 0,
+  stage: 'early',
+  lens: '',
+  questionVariant: 'standard',
+  feedbackRating: 0,
+  feedbackLiked: '',
+  feedbackWish: ''
 };
 
 // ─── ADMIN DETECTION ─────────────────────────────
@@ -1883,7 +2070,7 @@ if (appState.adminMode) {
 }
 
 // ─── STAGE ORDER ─────────────────────────────────
-const STAGES = ['stage-1','stage-2','stage-3-5','stage-4','stage-3','stage-5','stage-6','stage-7','stage-8'];
+const STAGES = ['stage-1','stage-2','stage-3-5','stage-4','stage-3','stage-4-5','stage-5','stage-6','stage-7','stage-7-5','stage-8'];
 
 // ─── NAVIGATION ──────────────────────────────────
 function goBack() {
@@ -1975,9 +2162,15 @@ function buildAdminActions() {
     html += '<button class="admin-btn" onclick="adminSkipTimer()">Skip Timer</button>';
     html += '<button class="admin-btn" onclick="adminPrefill()">Prefill Story</button>';
   }
+  if (appState.currentStage === 'stage-4-5') {
+    html += '<button class="admin-btn" onclick="selectStageRadio(\'deep\')">Set: Deep</button>';
+  }
   if (appState.currentStage === 'stage-6') {
     html += '<button class="admin-btn" onclick="adminSkipAnalysis()">Skip Analysis Timer</button>';
     html += '<button class="admin-btn" onclick="generateNarrativeReport()">Generate Report (free)</button>';
+  }
+  if (appState.currentStage === 'stage-7-5') {
+    html += '<button class="admin-btn" onclick="goToStage(\'stage-8\'); buildReportTeaser()">Skip Feedback</button>';
   }
   document.getElementById('adm-actions').innerHTML = html;
 }
@@ -1987,9 +2180,11 @@ function adminSkip() {
   if (idx >= STAGES.length - 1) return;
   const next = STAGES[idx + 1];
   if (next === 'stage-4') initStory();
+  if (next === 'stage-4-5') { appState.stage = 'early'; appState.lens = ''; }
   if (next === 'stage-5') initQuestions();
   if (next === 'stage-6' || next === 'analysis') { savePartialRecord(); initAnalysis(); }
   if (next === 'stage-7') initReveal();
+  if (next === 'stage-7-5') initFeedback();
   goToStage(next);
 }
 
@@ -2505,6 +2700,18 @@ function initQuestions() {
 
   document.getElementById('questions-story-text').textContent = appState.story;
 
+  // Conditional question text based on calibration stage
+  const q1El = document.getElementById('q1-item');
+  if (appState.stage === 'deep') {
+    q1El.querySelector('.question-text').textContent = 'What in this story felt most true?';
+    q1El.querySelector('.question-input').placeholder = 'The part that felt most right was...';
+    appState.questionVariant = 'deep';
+  } else {
+    q1El.querySelector('.question-text').textContent = 'What surprised you the most when writing it?';
+    q1El.querySelector('.question-input').placeholder = "I didn't expect to write...";
+    appState.questionVariant = 'standard';
+  }
+
   // Reset question visibility
   document.getElementById('questions-continue').classList.add('hidden');
 
@@ -2518,6 +2725,70 @@ function onQInput(n) {
   if (n === 1) {
     document.getElementById('questions-continue').classList.remove('hidden');
   }
+}
+
+
+// ─── CALIBRATION STAGE (4.5) ─────────────────────
+function selectStageRadio(value) {
+  appState.stage = value;
+  document.querySelectorAll('.stage-radio-option').forEach(el => el.classList.remove('selected'));
+  const target = document.getElementById('radio-' + value);
+  if (target) target.classList.add('selected');
+  document.getElementById('calibration-continue').disabled = false;
+}
+
+function onStage45Continue() {
+  appState.lens = document.getElementById('lens-input').value.trim();
+  goToStage('stage-5');
+  initQuestions();
+}
+
+
+// ─── FEEDBACK STAGE (7.5) ────────────────────────
+function initFeedback() {
+  const excerptEl = document.getElementById('feedback-excerpt');
+  if (excerptEl && appState.analysis) {
+    const parts = [];
+    if (appState.analysis.ownWords) parts.push(appState.analysis.ownWords);
+    if (appState.analysis.worldview) parts.push(appState.analysis.worldview);
+    const combined = parts.join('\n\n');
+    excerptEl.textContent = combined.slice(0, 700) + (combined.length > 700 ? '...' : '');
+  }
+  appState.feedbackRating = 0;
+  appState.feedbackLiked = '';
+  appState.feedbackWish = '';
+  document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
+  const likedEl = document.getElementById('feedback-liked');
+  const wishEl = document.getElementById('feedback-wish');
+  if (likedEl) likedEl.value = '';
+  if (wishEl) wishEl.value = '';
+}
+
+function setRating(n) {
+  appState.feedbackRating = n;
+  document.querySelectorAll('.star').forEach((s, i) => {
+    s.classList.toggle('active', i < n);
+  });
+}
+
+function submitFeedback() {
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      timestamp:      new Date().toISOString(),
+      sessionId:      appState.sessionId,
+      feedbackRating: appState.feedbackRating,
+      feedbackLiked:  appState.feedbackLiked,
+      feedbackWish:   appState.feedbackWish,
+      stage:          appState.stage,
+      headline:       appState.headline,
+      type:           'feedback'
+    })
+  }).catch(() => {});
+  goToStage('stage-8');
+  buildReportTeaser();
 }
 
 
@@ -2620,11 +2891,14 @@ async function initAnalysis() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      idea:          state.signal || "",
-      headline:      state.headline || "",
-      story:         state.story || "",
-      narrativeName: state.headline || "",
-      q1:            state.questions?.[0] || ""
+      idea:            state.signal || "",
+      headline:        state.headline || "",
+      story:           state.story || "",
+      narrativeName:   state.headline || "",
+      q1:              state.questions?.[0] || "",
+      stage:           state.stage || "early",
+      lens:            state.lens || "",
+      questionVariant: state.questionVariant || "standard"
     })
   })
   .then(async r => {
@@ -3532,6 +3806,12 @@ function restartApp() {
   appState.analysisSections = null;
   appState.email = '';
   appState.completionTime = null;
+  appState.stage = 'early';
+  appState.lens = '';
+  appState.questionVariant = 'standard';
+  appState.feedbackRating = 0;
+  appState.feedbackLiked = '';
+  appState.feedbackWish = '';
 
   // Reset mic state
   micStopListening();
@@ -3583,6 +3863,11 @@ function restartApp() {
   // Reset question visibility
   document.getElementById('questions-continue').classList.add('hidden');
 
+  // Reset calibration radio buttons
+  document.querySelectorAll('.stage-radio-option').forEach(el => el.classList.remove('selected'));
+  const calBtn = document.getElementById('calibration-continue');
+  if (calBtn) calBtn.disabled = true;
+
   // Reset narrative name
   // Reset signal/headline placeholder cycles
   sigIdx = 0; sigFocused = false;
@@ -3620,15 +3905,18 @@ function restartApp() {
 function saveSessionToStorage() {
   try {
     localStorage.setItem('wyfSession', JSON.stringify({
-      signal:        appState.signal,
-      headline:      appState.headline,
-      story:         appState.story,
-      analysisRaw:   appState.analysisRaw,
-      timerDuration: appState.timerDuration,
-      questions:     appState.questions,
-      email:         appState.email,
-      currentStage:  appState.currentStage,
-      ts:            Date.now()
+      signal:          appState.signal,
+      headline:        appState.headline,
+      story:           appState.story,
+      analysisRaw:     appState.analysisRaw,
+      timerDuration:   appState.timerDuration,
+      questions:       appState.questions,
+      email:           appState.email,
+      currentStage:    appState.currentStage,
+      stage:           appState.stage,
+      lens:            appState.lens,
+      questionVariant: appState.questionVariant,
+      ts:              Date.now()
     }));
   } catch(err) {
     console.warn('localStorage save failed:', err);
@@ -3675,7 +3963,10 @@ function restoreSessionOnLoad() {
     appState.analysisRaw   = saved.analysisRaw   || '';
     appState.timerDuration = saved.timerDuration || 10;
     appState.questions     = saved.questions     || [''];
-    appState.email         = saved.email         || '';
+    appState.email           = saved.email           || '';
+    appState.stage           = saved.stage           || 'early';
+    appState.lens            = saved.lens            || '';
+    appState.questionVariant = saved.questionVariant || 'standard';
 
     const stage = saved.currentStage || 'stage-1';
 
@@ -3746,7 +4037,9 @@ async function generateNarrativeReport() {
         signal:        appState.signal,
         headline:      appState.headline,
         narrativeName: appState.headline,
-        analysisRaw:   appState.analysisRaw
+        analysisRaw:   appState.analysisRaw,
+        stage:         appState.stage || 'early',
+        lens:          appState.lens  || ''
       })
     });
 

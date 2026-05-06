@@ -17,11 +17,33 @@ export default async function handler(req, res) {
     });
   }
 
-  const { idea, headline, story, narrativeName, q1 } = req.body;
+  const { idea, headline, story, narrativeName, q1, stage = 'early', lens = '', questionVariant = 'standard' } = req.body;
+
+  const calibrationBlock = `---
+Calibration instruction (runs before all sections)
+
+Before analyzing, read the story and the context below.
+
+Where they are: ${stage}
+Their lens or worldview (if provided): ${lens || 'none provided'}
+
+Step 1 — Determine interpretive mode:
+- If stage is "early" or "mid": use DISCOVERY mode. Treat the story as mapping new territory. Prioritize surfacing what they haven't yet named. Look for contradictions, unplanned details, and emotional signals that haven't been processed yet.
+- If stage is "deep": use VERIFICATION mode. Treat the story as evidence of what they already suspect. Your job is not to discover — it's to confirm or challenge their existing map with precision. Look for where their story deviates from what someone with their experience would expect to write.
+
+Step 2 — If a lens is provided: Read it before analyzing. Let it inform how you interpret assumptions and worldview. Do not reference it explicitly in the output — but let it shape which assumptions feel load-bearing and which emotional signals feel most relevant.
+
+Step 3 — In VERIFICATION mode, adjust the following sections:
+- YOUR OWN WORDS: Look for the line that feels most precisely true — the one that confirms rather than surprises. Not the dramatic line. The line where they already knew but hadn't said it out loud.
+- PART 1 — WHAT YOU DIDN'T PLAN TO WRITE: Reframe as "what the story reveals that your analysis hasn't caught yet" — small deviations from what a deep expert would write.
+- PART 8 — DEFAULT NARRATIVE: Replace WHAT IT COSTS with WHAT THIS CONFIRMS — name the assumption that keeps showing up even now, after all they've learned.
+---`;
 
   const analysisPrompt = `You are analyzing a 10-minute clarity sprint. Someone has been circling a decision, idea, or question and wrote a story where it resolved. Surface what their writing reveals that analytical thinking couldn't reach.
 
 For every finding, quote their exact words as evidence. If something is absent from the story, name it — absence is information.
+
+${calibrationBlock}
 
 What they're circling: ${idea || "not specified"}
 Headline they gave it: ${headline || "not specified"}
@@ -29,7 +51,8 @@ Narrative name they gave it: ${narrativeName || "not named"}
 Story they wrote:
 ${story}
 
-What surprised them when writing it: ${q1 || "not answered"}
+Question shown to user: ${questionVariant === 'deep' ? 'What in this story felt most true?' : 'What surprised you the most when writing it?'}
+Their answer: ${q1 || "not answered"}
 
 Respond with exactly these sections in exactly this order, using exactly these headers:
 

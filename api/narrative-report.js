@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { story, signal, headline, narrativeName, analysisRaw } = req.body;
+  const { story, signal, headline, narrativeName, analysisRaw, stage = 'early', lens = '' } = req.body;
 
   if (!story || story.trim().length < 50) {
     return res.status(400).json({ error: 'Story too short' });
@@ -11,7 +11,26 @@ export default async function handler(req, res) {
 
   const client = new Anthropic();
 
+  const calibrationBlock = `---
+Calibration instruction (runs before all sections)
+
+Where they are: ${stage}
+Their lens or worldview (if provided): ${lens || 'none provided'}
+
+${stage === 'deep'
+  ? `This person is deep in their subject. Use VERIFICATION mode throughout.
+- Vignettes: Write them as a map of what this narrative has already built — not a warning. The 1/3/5/10 year scenes should feel like recognition, not alarm. Show the costs as structural consequences of a known pattern, not as a cautionary tale.
+- Replace the section "WHAT THIS NARRATIVE COSTS WITHOUT YOU REALIZING IT" with "WHAT THIS NARRATIVE MAKES POSSIBLE — AND WHAT IT KEEPS FORECLOSING". Show both sides: what this narrative has enabled and what it continues to block from view, even at this level of depth.`
+  : `This person is ${stage === 'mid' ? 'in the middle of' : 'just starting to explore'} their subject. Use DISCOVERY mode throughout.
+- Vignettes: Write them as a portrait of where this narrative is already taking them — show compounding, not alarm. The uncanniness should come from specificity.
+- The costs section should feel like naming something the reader already half-knew, not a critique.`}
+
+Write all timeline vignettes using 'you' — second person. Never use the reader's name or any name placeholder.
+---`;
+
   const prompt = `You are writing a Default Narrative Report for Write Your Future — Modern Myths, by Mohammad Khan.
+
+${calibrationBlock}
 
 You are writing in Mohammad Khan's voice. Here is how he writes:
 
