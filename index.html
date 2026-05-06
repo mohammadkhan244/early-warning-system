@@ -4498,7 +4498,7 @@ document.querySelectorAll('.stage').forEach(s => {
 
   // Check for ?report=true from Stripe redirect
   const urlParams = new URLSearchParams(location.search);
-  if (!urlParams.get('report') && !appState.adminMode) {
+  if (!urlParams.get('report')) {
     restoreSessionOnLoad();
   }
 
