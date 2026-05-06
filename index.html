@@ -390,45 +390,45 @@
       border-color: rgba(240,236,228,0.35);
     }
 
-    /* ─── STAGE 7.5: FEEDBACK ─── */
-    #stage-7-5 {
+    /* ─── STAGE 4.5: bottom padding so button isn't clipped ─── */
+    #stage-4-5 .stage-content {
+      padding-bottom: 60px;
+    }
+
+    /* ─── STAGE 7.5: FEEDBACK — mirrors stage-5 layout ─── */
+    #stage-7-5 { align-items: flex-start; }
+    .feedback-layout {
+      display: flex;
+      width: 100%;
       min-height: 100vh;
     }
-    .stage-7-5-layout {
-      display: flex;
-      gap: 48px;
-      width: 100%;
-      max-width: 1100px;
-      min-height: calc(100vh - clamp(48px, 10vh, 112px));
-      align-items: stretch;
-    }
-    .feedback-left {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-    }
-    .feedback-right {
-      flex: 1;
-      min-width: 0;
-    }
-    .feedback-excerpt-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: rgba(240,236,228,0.4);
-      margin-bottom: 12px;
-      flex-shrink: 0;
-    }
-    .feedback-excerpt {
-      font-size: 0.85rem;
-      color: rgba(240,236,228,0.72);
-      line-height: 1.7;
-      border-left: 2px solid rgba(184,115,51,0.35);
-      padding-left: 16px;
-      flex: 1;
+    .feedback-analysis-panel {
+      width: 40%;
+      padding: 60px 40px;
+      border-right: 1px solid #111108;
       overflow-y: auto;
+      max-height: 100vh;
+      position: sticky;
+      top: 0;
+    }
+    .feedback-analysis-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #2e2e28;
+      margin-bottom: 20px;
+    }
+    .feedback-analysis-text {
+      font-family: Georgia, serif;
+      font-size: 0.85rem;
+      color: rgba(240, 236, 228, 0.5);
+      line-height: 1.85;
       white-space: pre-wrap;
+    }
+    .feedback-form-panel {
+      width: 60%;
+      padding: 60px 64px;
+      overflow-y: auto;
     }
     .rating-row {
       display: flex;
@@ -1197,7 +1197,6 @@
     #stage-5,
     #stage-6,
     #stage-7,
-    #stage-7-5,
     #stage-8 {
       align-items: flex-start;
       justify-content: center;
@@ -1362,9 +1361,8 @@
       #stage-5 .questions-panel { padding: 24px 16px; }
       #stage-6 .stage-content { padding: 24px 16px; }
       #stage-8 .stage-content { padding: 10px 16px 48px; }
-      .stage-7-5-layout { flex-direction: column; gap: 24px; min-height: unset; }
-      .feedback-left { display: none; }
-      .feedback-excerpt { flex: none; }
+      .feedback-analysis-panel { display: none; }
+      .feedback-form-panel { width: 100%; padding: 24px 16px; }
 
       h1 { font-size: clamp(22px, 7vw, 30px); }
       h2 { font-size: clamp(20px, 6vw, 26px); }
@@ -1899,12 +1897,12 @@
      STAGE 7.5: FEEDBACK
 ═══════════════════════════════════════════════ -->
 <div id="stage-7-5" class="stage">
-  <div class="stage-content stage-7-5-layout">
-    <div class="feedback-left">
-      <div class="feedback-excerpt-label">From your analysis</div>
-      <div class="feedback-excerpt" id="feedback-excerpt"></div>
+  <div class="feedback-layout">
+    <div class="feedback-analysis-panel">
+      <div class="feedback-analysis-label">Your analysis</div>
+      <div class="feedback-analysis-text" id="feedback-excerpt"></div>
     </div>
-    <div class="feedback-right">
+    <div class="feedback-form-panel">
       <button class="back-link" onclick="goBack()">← back</button>
       <h2>Before you see the report</h2>
       <p class="stage-subtext">One minute. What did the analysis get right?</p>
@@ -1920,19 +1918,19 @@
         </div>
       </div>
 
-      <div style="margin-top:20px;">
-        <p class="stage-subtext" style="margin-bottom:6px;">What felt most true?</p>
-        <textarea class="question-input" id="feedback-liked" rows="3" placeholder="The part about..." oninput="appState.feedbackLiked = this.value" style="width:100%; box-sizing:border-box;"></textarea>
+      <div class="question-item" style="margin-top:28px;">
+        <p class="question-text">What felt most true?</p>
+        <textarea class="question-input" id="feedback-liked" rows="3" placeholder="The part about..." oninput="appState.feedbackLiked = this.value"></textarea>
       </div>
 
-      <div style="margin-top:16px;">
-        <p class="stage-subtext" style="margin-bottom:6px;">What missed the mark?</p>
-        <textarea class="question-input" id="feedback-wish" rows="3" placeholder="It didn't account for..." oninput="appState.feedbackWish = this.value" style="width:100%; box-sizing:border-box;"></textarea>
+      <div class="question-item">
+        <p class="question-text">What missed the mark?</p>
+        <textarea class="question-input" id="feedback-wish" rows="3" placeholder="It didn't account for..." oninput="appState.feedbackWish = this.value"></textarea>
       </div>
 
-      <div style="margin-top:24px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+      <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-top:8px;">
         <button class="btn btn-primary" onclick="submitFeedback()">Submit &amp; see report</button>
-        <button class="back-link" style="cursor:pointer;" onclick="goToStage('stage-8'); buildReportTeaser()">Skip →</button>
+        <button class="back-link" style="border:none; background:none; cursor:pointer; padding:0;" onclick="goToStage('stage-8'); buildReportTeaser()">Skip →</button>
       </div>
     </div>
   </div>
@@ -2649,6 +2647,7 @@ function checkFinish() {
   }
 }
 
+let _storyAutoSaveTimer = null;
 function onStoryInput() {
   appState.story = document.getElementById('story-textarea').value;
   const wc = wordCount(appState.story);
@@ -2663,6 +2662,10 @@ function onStoryInput() {
     setTimeout(() => { instr.style.display = 'none'; }, 600);
     storyTimerInt = setInterval(tickStory, 1000);
   }
+
+  // Debounced autosave — protects against accidental refresh while writing
+  clearTimeout(_storyAutoSaveTimer);
+  _storyAutoSaveTimer = setTimeout(saveSessionToStorage, 1500);
 
   checkFinish();
 }
@@ -2735,6 +2738,7 @@ function onQInput(n) {
   if (n === 1) {
     document.getElementById('questions-continue').classList.remove('hidden');
   }
+  saveSessionToStorage();
 }
 
 
@@ -3993,12 +3997,29 @@ function restoreSessionOnLoad() {
         }
       }, 450);
     } else if (saved.story) {
-      // Restore to story stage
-      goToStage('stage-4');
-      setTimeout(() => {
-        const ta = document.getElementById('story-textarea');
-        if (ta) { ta.value = saved.story; ta.dispatchEvent(new Event('input')); }
-      }, 450);
+      const savedStage = saved.currentStage || 'stage-4';
+      if (savedStage === 'stage-5') {
+        // Restore to questions stage — story is written, question not yet answered
+        goToStage('stage-5');
+        setTimeout(() => {
+          document.getElementById('questions-story-text').textContent = appState.story;
+          initQuestions();
+          // Pre-fill question answer if saved
+          const q1 = appState.questions?.[0];
+          if (q1) {
+            const inp = document.getElementById('q1-input');
+            if (inp) { inp.value = q1; }
+            document.getElementById('questions-continue').classList.remove('hidden');
+          }
+        }, 450);
+      } else {
+        // Restore to story stage — pre-fill the textarea
+        goToStage('stage-4');
+        setTimeout(() => {
+          const ta = document.getElementById('story-textarea');
+          if (ta) { ta.value = saved.story; ta.dispatchEvent(new Event('input')); }
+        }, 450);
+      }
     }
   } catch(err) {
     console.warn('Session restore failed:', err);

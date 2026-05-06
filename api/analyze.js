@@ -25,18 +25,20 @@ Calibration instruction (runs before all sections)
 Before analyzing, read the story and the context below.
 
 Where they are: ${stage}
-Their lens or worldview (if provided): ${lens || 'none provided'}
+Their lens, tradition, or worldview (if provided): ${lens}
 
 Step 1 — Determine interpretive mode:
-- If stage is "early" or "mid": use DISCOVERY mode. Treat the story as mapping new territory. Prioritize surfacing what they haven't yet named. Look for contradictions, unplanned details, and emotional signals that haven't been processed yet.
-- If stage is "deep": use VERIFICATION mode. Treat the story as evidence of what they already suspect. Your job is not to discover — it's to confirm or challenge their existing map with precision. Look for where their story deviates from what someone with their experience would expect to write.
+- If stage is "early" or "mid": use DISCOVERY mode. The writer may not fully know what they want. Surface what analytical thinking couldn't reach. Treat the default narrative as something worth examining.
 
-Step 2 — If a lens is provided: Read it before analyzing. Let it inform how you interpret assumptions and worldview. Do not reference it explicitly in the output — but let it shape which assumptions feel load-bearing and which emotional signals feel most relevant.
+- If stage is "deep": use VERIFICATION mode. Stop here before continuing. Do not proceed with the default analytical frame. The writer has an established worldview they have been developing deliberately. Your job is not to examine whether their stance is correct — it is to surface what the story reveals within their existing framework.
 
-Step 3 — In VERIFICATION mode, adjust the following sections:
-- YOUR OWN WORDS: Look for the line that feels most precisely true — the one that confirms rather than surprises. Not the dramatic line. The line where they already knew but hadn't said it out loud.
-- PART 1 — WHAT YOU DIDN'T PLAN TO WRITE: Reframe as "what the story reveals that your analysis hasn't caught yet" — small deviations from what a deep expert would write.
-- PART 8 — DEFAULT NARRATIVE: Replace WHAT IT COSTS with WHAT THIS CONFIRMS — name the assumption that keeps showing up even now, after all they've learned.
+Step 2 — If a lens is provided:
+This is not background context. It is an instruction. Read it before touching the story. Any term in the story that could belong to this lens or tradition — treat it as intentional, precise, and load-bearing. Do not reinterpret it through a therapeutic, creator-economy, or psychological frame. If you find yourself doing so, stop and correct.
+
+Step 3 — VERIFICATION mode hard rules:
+- YOUR OWN WORDS: Do not look for what slipped past editorial control. Look for the line that is most precisely true — where the writer said something more exactly than they may have realized. Precision is the tell, not accident.
+- PART 2 — EMOTIONAL FIELD: Do not read withdrawal, detachment, or observer stances as loneliness, fear, or avoidance. If the writer's lens treats these as correct epistemic or ontological positions, name the emotion underneath accurately — do not project deficit where their framework sees function.
+- PART 8 — DEFAULT NARRATIVE: STOP before naming the narrative. Ask: did this person fall into this narrative, or did they build it? If the story shows internal consistency, decades of development, or deliberate philosophical positioning — the narrative is their methodology, not a trap. Do not apply WHAT IT COSTS. Replace it with WHAT THIS CONFIRMS: one to two sentences on what the story validates about the direction they are already in. Do not suggest they test whether their stance is correct. Do not prescribe engagement, participation, or openness to feedback as the ONE MOVE unless the story itself shows signs of avoidance, not deliberate design.
 ---`;
 
   const analysisPrompt = `You are analyzing a 10-minute clarity sprint. Someone has been circling a decision, idea, or question and wrote a story where it resolved. Surface what their writing reveals that analytical thinking couldn't reach.
