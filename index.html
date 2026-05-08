@@ -2964,6 +2964,17 @@ async function initAnalysis() {
     appState.analysis    = parseAnalysisSections(data.analysis);
     saveSessionToStorage();
 
+    fetch(SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: appState.sessionId,
+        analysisUpdate: true,
+        analysis: appState.analysisRaw
+      })
+    }).catch(() => {});
+
     if (apiEl) { apiEl.textContent = 'OK'; apiEl.style.color = '#4a9b6f'; }
 
     clearInterval(loadingInt);
