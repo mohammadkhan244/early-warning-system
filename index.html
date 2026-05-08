@@ -1493,10 +1493,18 @@
     #stage-8 .stage-content { padding-bottom: 48px; }
     #stage-8 h2 { font-size: clamp(18px, 3vw, 24px); margin-bottom: 4px; }
     #stage-8 .stage-subtext { margin-bottom: 8px; font-size: clamp(12px, 1.5vw, 14px); }
+    #stage-8 .stage-content { display: flex; flex-direction: column; }
     #stage-8 .email-wrapper { margin: 8px 0; }
     #stage-8 .cta-divider { margin: clamp(8px, 1.2vh, 14px) 0; }
     #stage-8 .session-heading { font-size: 1.05rem; margin-bottom: 4px; }
     #stage-8 .session-copy { margin-bottom: 10px; font-size: 13px; line-height: 1.55; }
+
+    @media (max-width: 768px) {
+      .email-wrapper { order: -1; }
+      .cta-confirmation { order: -1; }
+      .stage-7-download-btn { order: 1; }
+      .download-label-mobile::after { content: " instead"; }
+    }
     #stage-8 #cookie-section { margin-top: 0; padding-top: 0; border-top: none; }
     #stage-8 .cookie-jar-sublabel { margin-bottom: 12px; font-size: 12px; }
     #stage-8 .cookie-jar-count { margin-bottom: 12px; }
@@ -1945,11 +1953,12 @@
     <p class="stage-subtext">What you wrote. What it revealed. What to do about it. All in one document.</p>
 
     <div class="email-wrapper">
-      <div class="email-label">Where should we send your report?</div>
+      <div class="email-label">Get your report by email</div>
+      <p style="font-size:0.78rem; color:rgba(240,236,228,0.6); margin-bottom:8px; font-style:italic;">On mobile, email is the most reliable way to receive your report.</p>
       <input type="email" id="email-input" placeholder="your@email.com" oninput="appState.email = this.value">
     </div>
 
-    <button class="btn btn-primary" onclick="handleReport()">Send my report</button>
+    <button class="btn btn-primary stage-7-download-btn" onclick="handleReport()"><span class="download-label-mobile">Download</span></button>
     <button class="back-link" onclick="goToStage('stage-6')" style="margin-top:12px; margin-bottom:4px; display:block;">← back to analysis</button>
     <p class="cta-confirmation" id="cta-confirmation">
       Your report is downloading. Check your inbox — and your spam folder if you don't see it within a few minutes. Subject line: <em>Your Write Your Future report is here</em>
@@ -3655,7 +3664,13 @@ function generatePDF() {
   const filename = 'write-your-future-' +
     (appState.headline || 'report').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') +
     '.pdf';
-  doc.save(filename);
+  const isMobileSafari = /iP(ad|hone|od)/.test(navigator.userAgent) && /WebKit/.test(navigator.userAgent) && !window.MSStream;
+  if (isMobileSafari) {
+    const pdfOutput = doc.output('bloburl');
+    window.open(pdfOutput, '_blank');
+  } else {
+    doc.save(filename);
+  }
 }
 
 
