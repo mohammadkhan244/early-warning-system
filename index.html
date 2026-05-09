@@ -4686,7 +4686,7 @@ document.querySelectorAll('.stage').forEach(s => {
       cta.className = 'share-sprint-cta';
       cta.innerHTML = `
         <p class=”share-sprint-cta-label”>You just read what a 10-minute sprint surfaced in someone else's story.</p>
-        <a href=”${location.origin + location.pathname}” class=”share-sprint-cta-btn”>Write your own 10-minute sprint →</a>
+        <a href=”${location.origin + location.pathname}” class=”share-sprint-cta-btn” style=”display:inline-block;background:#b87333;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:4px;font-size:0.9rem;letter-spacing:0.03em;”>Write your own 10-minute sprint →</a>
       `;
       container.appendChild(cta);
     }, 450);
