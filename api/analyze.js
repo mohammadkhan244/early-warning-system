@@ -1,3 +1,6 @@
+// SYSTEM CONTRACT: EWS_SYSTEM_CONTRACT.md
+// All changes to this file must be checked against the system contract before implementation.
+// If a proposed change cannot be mapped to one of the six primitives, it does not belong in EWS.
 import Anthropic from "@anthropic-ai/sdk";
 
 export default async function handler(req, res) {
