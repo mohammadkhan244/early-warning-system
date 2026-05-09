@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Write Your Future — Modern Myths</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1499,6 +1500,40 @@
     #stage-8 .session-heading { font-size: 1.05rem; margin-bottom: 4px; }
     #stage-8 .session-copy { margin-bottom: 10px; font-size: 13px; line-height: 1.55; }
 
+    /* ─── SHARE ─── */
+    .share-toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: rgba(184,115,51,0.96);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 4px;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      z-index: 9999;
+      white-space: nowrap;
+    }
+    .share-toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .share-banner {
+      background: rgba(184,115,51,0.08);
+      border: 1px solid rgba(184,115,51,0.25);
+      border-radius: 4px;
+      padding: 10px 16px;
+      margin-bottom: 24px;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(240,236,228,0.5);
+    }
+
     @media (max-width: 768px) {
       .email-wrapper { order: -1; }
       .cta-confirmation { order: -1; }
@@ -1873,6 +1908,12 @@
 
       <div class="analysis-continue-container">
         <button id="analysis-continue" class="hidden" onclick="goToStage('stage-7'); initReveal()">Continue</button>
+        <button id="share-analysis-btn" class="hidden" onclick="shareAnalysis()"
+          style="background:transparent; border:1px solid rgba(240,236,228,0.2); color:rgba(240,236,228,0.65); padding:12px 24px; border-radius:4px; font-size:14px; cursor:pointer; letter-spacing:0.03em; transition:border-color 0.2s, color 0.2s;"
+          onmouseover="this.style.borderColor='rgba(184,115,51,0.6)'; this.style.color='rgba(240,236,228,0.9)'"
+          onmouseout="this.style.borderColor='rgba(240,236,228,0.2)'; this.style.color='rgba(240,236,228,0.65)'">
+          ↗ Share analysis
+        </button>
       </div>
     </div>
 
@@ -2263,6 +2304,7 @@ function adminSkipAnalysis() {
   clearInterval(analysisTimerInt);
   document.getElementById('analysis-progress-bar').style.width = '100%';
   document.getElementById('analysis-continue').classList.remove('hidden');
+  document.getElementById('share-analysis-btn').classList.remove('hidden');
   document.getElementById('report-locked').style.display = 'block';
 }
 
@@ -3313,6 +3355,7 @@ function startAnalysisTimer() {
     if (elapsed >= duration) {
       clearInterval(analysisTimerInt);
       document.getElementById('analysis-continue').classList.remove('hidden');
+      document.getElementById('share-analysis-btn').classList.remove('hidden');
       document.getElementById('report-locked').style.display = 'block';
     }
   }, 1000);
@@ -3832,6 +3875,35 @@ function generateNarrativePDF(reportText) {
 }
 
 
+// ─── SHARE ANALYSIS ──────────────────────────────
+function shareAnalysis() {
+  if (!appState.analysisRaw) return;
+  const payload = JSON.stringify({
+    headline:    appState.headline    || '',
+    signal:      appState.signal      || '',
+    analysisRaw: appState.analysisRaw || ''
+  });
+  let compressed;
+  try { compressed = LZString.compressToEncodedURIComponent(payload); } catch(e) { compressed = null; }
+  if (!compressed) { showShareToast('Could not generate link'); return; }
+  const url = location.origin + location.pathname + '?s=' + compressed;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(() => showShareToast('Link copied to clipboard'))
+      .catch(() => { prompt('Copy this link:', url); });
+  } else {
+    prompt('Copy this link:', url);
+  }
+}
+
+function showShareToast(msg) {
+  const t = document.getElementById('share-toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('visible');
+  setTimeout(() => t.classList.remove('visible'), 3000);
+}
+
 // ─── RESTART ─────────────────────────────────────
 function restartApp() {
   const adminMode = appState.adminMode; // preserve across restart
@@ -4022,6 +4094,7 @@ function restoreSessionOnLoad() {
         document.querySelectorAll('.analysis-section').forEach(el => el.classList.add('visible'));
         clearInterval(analysisTimerInt);
         document.getElementById('analysis-continue').classList.remove('hidden');
+        document.getElementById('share-analysis-btn').classList.remove('hidden');
         document.getElementById('report-locked').style.display = 'block';
         // If they reached stage 7, 7.5, or 8 — take them there
         if (['stage-7','stage-7-5','stage-8'].includes(savedStage)) {
@@ -4548,8 +4621,43 @@ document.querySelectorAll('.stage').forEach(s => {
     }, 0);
   }
 
-  // Check for ?report=true from Stripe redirect
+  // Check for ?s= shared analysis link
   const urlParams = new URLSearchParams(location.search);
+  const shareParam = urlParams.get('s');
+  if (shareParam) {
+    try {
+      const payload = JSON.parse(LZString.decompressFromEncodedURIComponent(shareParam));
+      if (payload && payload.analysisRaw) {
+        appState.headline    = payload.headline    || '';
+        appState.signal      = payload.signal      || '';
+        appState.analysisRaw = payload.analysisRaw || '';
+        appState.analysis    = parseAnalysisSections(appState.analysisRaw);
+        goToStage('stage-6');
+        setTimeout(() => {
+          document.getElementById('radar-loading').style.display = 'none';
+          const container = document.getElementById('analysis-container');
+          container.style.display = 'block';
+          // Add shared-view banner
+          const banner = document.createElement('div');
+          banner.className = 'share-banner';
+          banner.textContent = (appState.headline ? '“' + appState.headline + '” — ' : '') + 'Shared analysis';
+          container.insertBefore(banner, container.firstChild);
+          renderAnalysis(appState.analysisRaw);
+          document.querySelectorAll('.analysis-section').forEach(el => el.classList.add('visible'));
+          clearInterval(analysisTimerInt);
+          // In share view: hide continue/report, show only share button
+          document.getElementById('analysis-continue').style.display = 'none';
+          document.getElementById('report-locked').style.display = 'none';
+          document.getElementById('share-analysis-btn').classList.remove('hidden');
+        }, 450);
+        return; // skip normal init flow
+      }
+    } catch(e) {
+      console.warn('Share link decode failed:', e);
+    }
+  }
+
+  // Check for ?report=true from Stripe redirect
   if (!urlParams.get('report')) {
     restoreSessionOnLoad();
   }
@@ -4570,6 +4678,8 @@ document.querySelectorAll('.stage').forEach(s => {
   loadCookieCount();
 })();
 </script>
+
+<div id="share-toast" class="share-toast"></div>
 
 <div id="scroll-indicator" style="display:none;">
   <div id="scroll-arrow">↓</div>
