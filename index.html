@@ -3886,14 +3886,40 @@ function shareAnalysis() {
   let compressed;
   try { compressed = LZString.compressToEncodedURIComponent(payload); } catch(e) { compressed = null; }
   if (!compressed) { showShareToast('Could not generate link'); return; }
-  const url = location.origin + location.pathname + '?s=' + compressed;
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url)
-      .then(() => showShareToast('Link copied to clipboard'))
-      .catch(() => { prompt('Copy this link:', url); });
-  } else {
-    prompt('Copy this link:', url);
-  }
+  const longUrl = location.origin + location.pathname + '?s=' + compressed;
+
+  const btn = document.getElementById('share-analysis-btn');
+  const originalText = btn ? btn.textContent : '';
+  if (btn) btn.textContent = 'Generating link…';
+
+  fetch('/api/shorten', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: longUrl })
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (btn) btn.textContent = originalText;
+      const shortUrl = data.url || longUrl;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shortUrl)
+          .then(() => showShareToast('Link copied to clipboard'))
+          .catch(() => { prompt('Copy this link:', shortUrl); });
+      } else {
+        prompt('Copy this link:', shortUrl);
+      }
+    })
+    .catch(() => {
+      if (btn) btn.textContent = originalText;
+      // Fall back to long URL
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(longUrl)
+          .then(() => showShareToast('Link copied to clipboard'))
+          .catch(() => { prompt('Copy this link:', longUrl); });
+      } else {
+        prompt('Copy this link:', longUrl);
+      }
+    });
 }
 
 function showShareToast(msg) {
