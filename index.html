@@ -3902,15 +3902,6 @@ function generateNarrativePDF(reportText) {
 // ─── SHARE ANALYSIS ──────────────────────────────
 function shareAnalysis() {
   if (!appState.analysisRaw) return;
-  const payload = JSON.stringify({
-    headline:    appState.headline    || '',
-    signal:      appState.signal      || '',
-    analysisRaw: appState.analysisRaw || ''
-  });
-  let compressed;
-  try { compressed = LZString.compressToEncodedURIComponent(payload); } catch(e) { compressed = null; }
-  if (!compressed) { showShareToast('Could not generate link'); return; }
-  const longUrl = location.origin + location.pathname + '?s=' + compressed;
 
   const btn = document.getElementById('share-analysis-btn');
   const originalText = btn ? btn.textContent : '';
@@ -3919,30 +3910,27 @@ function shareAnalysis() {
   fetch('/api/shorten', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: longUrl })
+    body: JSON.stringify({
+      headline:    appState.headline    || '',
+      signal:      appState.signal      || '',
+      analysisRaw: appState.analysisRaw || ''
+    })
   })
     .then(r => r.json())
     .then(data => {
       if (btn) btn.textContent = originalText;
-      const shortUrl = data.url || longUrl;
+      if (!data.url) throw new Error('No URL returned');
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(shortUrl)
+        navigator.clipboard.writeText(data.url)
           .then(() => showShareToast('Link copied to clipboard'))
-          .catch(() => { prompt('Copy this link:', shortUrl); });
+          .catch(() => { prompt('Copy this link:', data.url); });
       } else {
-        prompt('Copy this link:', shortUrl);
+        prompt('Copy this link:', data.url);
       }
     })
     .catch(() => {
       if (btn) btn.textContent = originalText;
-      // Fall back to long URL
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(longUrl)
-          .then(() => showShareToast('Link copied to clipboard'))
-          .catch(() => { prompt('Copy this link:', longUrl); });
-      } else {
-        prompt('Copy this link:', longUrl);
-      }
+      showShareToast('Could not generate link — try again');
     });
 }
 
@@ -4671,48 +4659,58 @@ document.querySelectorAll('.stage').forEach(s => {
     }, 0);
   }
 
-  // Check for ?s= shared analysis link
+  // Shared analysis view — renders for both ?id= (KV) and legacy ?s= (LZString)
   const urlParams = new URLSearchParams(location.search);
+
+  function mountSharedView(payload) {
+    appState.headline    = payload.headline    || '';
+    appState.signal      = payload.signal      || '';
+    appState.analysisRaw = payload.analysisRaw || '';
+    appState.analysis    = parseAnalysisSections(appState.analysisRaw);
+    goToStage('stage-6');
+    setTimeout(() => {
+      document.getElementById('radar-loading').style.display = 'none';
+      const container = document.getElementById('analysis-container');
+      container.style.display = 'block';
+      const banner = document.createElement('div');
+      banner.className = 'share-banner';
+      banner.textContent = (appState.headline ? '”' + appState.headline + '” — ' : '') + 'Shared analysis';
+      container.insertBefore(banner, container.firstChild);
+      renderAnalysis(appState.analysisRaw);
+      document.querySelectorAll('.analysis-section').forEach(el => el.classList.add('visible'));
+      clearInterval(analysisTimerInt);
+      document.getElementById('analysis-continue').style.display = 'none';
+      document.getElementById('report-locked').style.display = 'none';
+      document.getElementById('share-analysis-btn').classList.remove('hidden');
+      const cta = document.createElement('div');
+      cta.className = 'share-sprint-cta';
+      cta.innerHTML = `
+        <p class=”share-sprint-cta-label”>You just read what a 10-minute sprint surfaced in someone else's story.</p>
+        <a href=”${location.origin + location.pathname}” class=”share-sprint-cta-btn”>Write your own 10-minute sprint →</a>
+      `;
+      container.appendChild(cta);
+    }, 450);
+  }
+
+  const idParam = urlParams.get('id');
+  if (idParam) {
+    goToStage('stage-6');
+    fetch(`/api/share?id=${encodeURIComponent(idParam)}`)
+      .then(r => { if (!r.ok) throw new Error('not found'); return r.json(); })
+      .then(payload => { if (payload.analysisRaw) mountSharedView(payload); })
+      .catch(() => {
+        // Link expired or invalid — show message and let user start fresh
+        goToStage('stage-1');
+      });
+    return;
+  }
+
   const shareParam = urlParams.get('s');
   if (shareParam) {
     try {
       const payload = JSON.parse(LZString.decompressFromEncodedURIComponent(shareParam));
-      if (payload && payload.analysisRaw) {
-        appState.headline    = payload.headline    || '';
-        appState.signal      = payload.signal      || '';
-        appState.analysisRaw = payload.analysisRaw || '';
-        appState.analysis    = parseAnalysisSections(appState.analysisRaw);
-        goToStage('stage-6');
-        setTimeout(() => {
-          document.getElementById('radar-loading').style.display = 'none';
-          const container = document.getElementById('analysis-container');
-          container.style.display = 'block';
-          // Add shared-view banner
-          const banner = document.createElement('div');
-          banner.className = 'share-banner';
-          banner.textContent = (appState.headline ? '“' + appState.headline + '” — ' : '') + 'Shared analysis';
-          container.insertBefore(banner, container.firstChild);
-          renderAnalysis(appState.analysisRaw);
-          document.querySelectorAll('.analysis-section').forEach(el => el.classList.add('visible'));
-          clearInterval(analysisTimerInt);
-          // In share view: hide continue/report, show only share button
-          document.getElementById('analysis-continue').style.display = 'none';
-          document.getElementById('report-locked').style.display = 'none';
-          document.getElementById('share-analysis-btn').classList.remove('hidden');
-          // Add sprint CTA at the bottom
-          const cta = document.createElement('div');
-          cta.className = 'share-sprint-cta';
-          cta.innerHTML = `
-            <p class="share-sprint-cta-label">You just read what a 10-minute sprint surfaced in someone else's story.</p>
-            <a href="${location.origin + location.pathname}" class="share-sprint-cta-btn">Write your own 10-minute sprint →</a>
-          `;
-          container.appendChild(cta);
-        }, 450);
-        return; // skip normal init flow
-      }
-    } catch(e) {
-      console.warn('Share link decode failed:', e);
-    }
+      if (payload && payload.analysisRaw) { mountSharedView(payload); return; }
+    } catch(e) { console.warn('Share link decode failed:', e); }
   }
 
   // Check for ?report=true from Stripe redirect
