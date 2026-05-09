@@ -1533,6 +1533,30 @@
       text-transform: uppercase;
       color: rgba(240,236,228,0.5);
     }
+    .share-sprint-cta {
+      margin-top: 56px;
+      padding: 40px 0 24px;
+      border-top: 1px solid rgba(240,236,228,0.08);
+      text-align: center;
+    }
+    .share-sprint-cta-label {
+      font-size: 0.9rem;
+      color: rgba(240,236,228,0.55);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    .share-sprint-cta-btn {
+      display: inline-block;
+      background: #b87333;
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      letter-spacing: 0.03em;
+      transition: background 0.2s;
+    }
+    .share-sprint-cta-btn:hover { background: #a0622b; }
 
     @media (max-width: 768px) {
       .email-wrapper { order: -1; }
@@ -4675,6 +4699,14 @@ document.querySelectorAll('.stage').forEach(s => {
           document.getElementById('analysis-continue').style.display = 'none';
           document.getElementById('report-locked').style.display = 'none';
           document.getElementById('share-analysis-btn').classList.remove('hidden');
+          // Add sprint CTA at the bottom
+          const cta = document.createElement('div');
+          cta.className = 'share-sprint-cta';
+          cta.innerHTML = `
+            <p class="share-sprint-cta-label">You just read what a 10-minute sprint surfaced in someone else's story.</p>
+            <a href="${location.origin + location.pathname}" class="share-sprint-cta-btn">Write your own 10-minute sprint →</a>
+          `;
+          container.appendChild(cta);
         }, 450);
         return; // skip normal init flow
       }
