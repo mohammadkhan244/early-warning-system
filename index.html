@@ -9,6 +9,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Write Your Future — Modern Myths</title>
+  <link rel="icon" id="favicon-link" type="image/png" href="">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
   <style>
@@ -2146,6 +2147,103 @@
      JAVASCRIPT
 ═══════════════════════════════════════════════ -->
 <script>
+(function() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  const cx = 32, cy = 32, r = 28;
+  let angle = 0;
+
+  const dots = [
+    { a: 0.8, d: 0.55 },
+    { a: 1.4, d: 0.75 },
+    { a: 2.1, d: 0.45 },
+    { a: 3.5, d: 0.65 },
+    { a: 4.2, d: 0.80 },
+    { a: 5.1, d: 0.50 },
+  ];
+
+  function drawFrame() {
+    ctx.clearRect(0, 0, 64, 64);
+
+    // Background
+    ctx.fillStyle = '#0a0a0a';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 32, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rings
+    [0.35, 0.65, 1].forEach(scale => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * scale, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(184,115,51,0.2)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    });
+
+    // Crosshairs
+    ctx.strokeStyle = 'rgba(184,115,51,0.12)';
+    ctx.lineWidth = 0.6;
+    ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy); ctx.stroke();
+
+    // Phosphor decay dots
+    dots.forEach(dot => {
+      let delta = angle - dot.a;
+      if (delta < 0) delta += Math.PI * 2;
+      const decay = 1 - delta / (Math.PI * 2);
+      if (decay > 0.02) {
+        const dx = cx + Math.cos(dot.a) * r * dot.d;
+        const dy = cy + Math.sin(dot.a) * r * dot.d;
+        ctx.beginPath();
+        ctx.arc(dx, dy, 2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(184,115,51,${decay * 0.9})`;
+        ctx.fill();
+      }
+    });
+
+    // Sweep line
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    const sweepGrad = ctx.createLinearGradient(0, 0, r, 0);
+    sweepGrad.addColorStop(0, 'rgba(184,115,51,0.7)');
+    sweepGrad.addColorStop(1, 'rgba(184,115,51,0)');
+    ctx.strokeStyle = sweepGrad;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(r, 0);
+    ctx.stroke();
+    ctx.restore();
+
+    // Sweep trail
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angle - 0.6, angle);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(184,115,51,0.06)';
+    ctx.fill();
+    ctx.restore();
+
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+    ctx.fillStyle = '#b87333';
+    ctx.fill();
+
+    angle = (angle + 0.06) % (Math.PI * 2);
+
+    const link = document.getElementById('favicon-link');
+    if (link) link.href = canvas.toDataURL('image/png');
+  }
+
+  setInterval(drawFrame, 50);
+  drawFrame();
+})();
+
 'use strict';
 
 // ─── SHEETS URL ──────────────────────────────────
