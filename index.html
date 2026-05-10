@@ -4084,7 +4084,9 @@ function showShareToast(msg) {
 }
 
 function goToNarrativePage() {
-  window.location.href = '/report?session=' + appState.sessionId;
+  const sid = appState.sessionId || localStorage.getItem('wyfSessionId');
+  if (!sid) { alert('Session not found. Please complete the sprint first.'); return; }
+  window.open('/report?session=' + sid, '_self');
 }
 
 // ─── BACKGROUND NARRATIVE GENERATION ────────────
