@@ -1563,6 +1563,31 @@
     }
     .share-sprint-cta-btn:hover { background: #a0622b; }
 
+    #feedback-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9000;
+      background: transparent;
+      border: 1px solid rgba(184,115,51,0.35);
+      color: rgba(240,236,228,0.45);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    #feedback-btn:hover {
+      border-color: #b87333;
+      color: #b87333;
+      background: rgba(184,115,51,0.06);
+    }
+    #feedback-btn.copied {
+      border-color: #b87333;
+      color: #b87333;
+    }
+
     @media (max-width: 768px) {
       .email-wrapper { order: -1; }
       .cta-confirmation { order: -1; }
@@ -4738,6 +4763,19 @@ document.querySelectorAll('.stage').forEach(s => {
 
   loadCookieCount();
 })();
+
+document.getElementById('feedback-btn').addEventListener('click', function() {
+  navigator.clipboard.writeText('mohammadkhan@themohammadkhan.com').then(() => {
+    const btn = document.getElementById('feedback-btn');
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+});
 </script>
 
 <div id="share-toast" class="share-toast"></div>
@@ -4757,5 +4795,7 @@ document.querySelectorAll('.stage').forEach(s => {
   <div class="section-nav-dot" data-target="sec-absence" title="What's Missing"></div>
   <div class="section-nav-dot" data-target="section-defaultNarrative" title="Default Narrative"></div>
 </nav>
+
+<button id="feedback-btn">Feedback</button>
 </body>
 </html>
