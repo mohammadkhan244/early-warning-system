@@ -10,7 +10,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Write Your Future — Modern Myths</title>
   <link rel="icon" id="favicon-link" type="image/png" href="">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1714,6 +1714,7 @@
       <div class="fill-blank-input-wrapper">
         <div class="fill-blank-placeholder" id="signal-placeholder"></div>
         <textarea id="signal-input" rows="2"
+          aria-label="What I keep coming back to"
           oninput="onSignalInput()"
           onfocus="onSignalFocus()"
           onblur="onSignalBlur()"></textarea>
@@ -1737,7 +1738,7 @@
       <span class="fill-blank-prefix">When this resolves, it's...</span>
       <div class="fill-blank-input-wrapper">
         <div class="fill-blank-placeholder" id="headline-placeholder"></div>
-        <input type="text" id="headline-input" style="min-height:0;padding:12px 16px;"
+        <input type="text" id="headline-input" aria-label="When this resolves, it's..." style="min-height:0;padding:12px 16px;"
           oninput="onHeadlineInput()"
           onfocus="onHeadlineFocus()"
           onblur="onHeadlineBlur()">
@@ -2052,7 +2053,7 @@
     <div class="email-wrapper">
       <div class="email-label">Get your report by email</div>
       <p style="font-size:0.78rem; color:rgba(240,236,228,0.6); margin-bottom:8px; font-style:italic;">On mobile, email is the most reliable way to receive your report.</p>
-      <input type="email" id="email-input" placeholder="your@email.com" oninput="appState.email = this.value">
+      <input type="email" id="email-input" aria-label="Your email address" placeholder="your@email.com" oninput="appState.email = this.value">
     </div>
 
     <button class="btn btn-primary stage-7-download-btn" onclick="handleReport()"><span class="download-label-mobile">Download</span></button>
@@ -4084,9 +4085,15 @@ function showShareToast(msg) {
 }
 
 function goToNarrativePage() {
-  const sid = appState.sessionId || localStorage.getItem('wyfSessionId');
-  if (!sid) { alert('Session not found. Please complete the sprint first.'); return; }
-  window.open('/report?session=' + sid, '_self');
+  const sid = appState.sessionId
+    || (JSON.parse(localStorage.getItem('wyfSession') || '{}').sessionId)
+    || '';
+  if (!sid) {
+    alert('Session not found. Please complete the sprint first.');
+    return;
+  }
+  const url = 'https://early-warning-system-kappa.vercel.app/report?session=' + sid;
+  window.location.assign(url);
 }
 
 // ─── BACKGROUND NARRATIVE GENERATION ────────────
