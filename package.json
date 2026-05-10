@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@anthropic-ai/sdk": "latest",
+    "@vercel/kv": "latest",
     "airtable": "latest"
   }
 }

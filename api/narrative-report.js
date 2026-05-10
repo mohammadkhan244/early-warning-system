@@ -2,11 +2,12 @@
 // All changes to this file must be checked against the system contract before implementation.
 // If a proposed change cannot be mapped to one of the six primitives, it does not belong in EWS.
 import Anthropic from '@anthropic-ai/sdk';
+import { kv } from '@vercel/kv';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { story, signal, headline, narrativeName, analysisRaw, stage = 'early', lens = '' } = req.body;
+  const { story, signal, headline, narrativeName, analysisRaw, stage = 'early', lens = '', sessionId } = req.body;
 
   if (!story || story.trim().length < 50) {
     return res.status(400).json({ error: 'Story too short' });
@@ -137,6 +138,24 @@ Do not add any closing CTA, booking link, or sign-off. That gets added separatel
     });
 
     const report = response.content[0].text.trim();
+
+    if (sessionId) {
+      try {
+        await kv.set(
+          `report:${sessionId}`,
+          {
+            sessionId,
+            narrativeReport: report,
+            narrativeName: narrativeName || headline,
+            generatedAt: new Date().toISOString()
+          },
+          { ex: 60 * 60 * 24 * 90 }
+        );
+      } catch (kvErr) {
+        console.warn('KV save failed (non-fatal):', kvErr.message);
+      }
+    }
+
     return res.status(200).json({ success: true, report });
 
   } catch(err) {

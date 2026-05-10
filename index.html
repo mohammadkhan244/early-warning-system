@@ -2085,6 +2085,11 @@
         Get the full report — $30
       </a>
       <p style="font-size:11px; color:rgba(240,236,228,0.22); margin-top:10px; font-style:italic;">One-time. Opens in a new tab — your data stays here.</p>
+      <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(184,115,51,0.12);">
+        <button id="see-full-report-btn" class="btn" onclick="window.open('https://early-warning-system-kappa.vercel.app/report?session=' + appState.sessionId, '_blank')" style="background:transparent; border:1px solid rgba(184,115,51,0.4); color:rgba(240,236,228,0.7); font-size:13px; padding:10px 22px;">
+          See your full report
+        </button>
+      </div>
     </div>
 
     <div id="report-generating" style="display:none; margin-top:32px; text-align:center; padding:24px 0;">
@@ -2271,7 +2276,8 @@ const appState = {
   questionVariant: 'standard',
   feedbackRating: 0,
   feedbackLiked: '',
-  feedbackWish: ''
+  feedbackWish: '',
+  narrativeReportGenerated: false
 };
 
 // ─── ADMIN DETECTION ─────────────────────────────
@@ -3169,6 +3175,8 @@ async function initAnalysis() {
         analysis: appState.analysisRaw
       })
     }).catch(() => {});
+
+    generateNarrativeReportBackground();
 
     if (apiEl) { apiEl.textContent = 'OK'; apiEl.style.color = '#4a9b6f'; }
 
@@ -4069,6 +4077,35 @@ function showShareToast(msg) {
   t.textContent = msg;
   t.classList.add('visible');
   setTimeout(() => t.classList.remove('visible'), 3000);
+}
+
+// ─── BACKGROUND NARRATIVE GENERATION ────────────
+async function generateNarrativeReportBackground() {
+  if (appState.narrativeReportGenerated) return;
+  appState.narrativeReportGenerated = true;
+  try {
+    const res = await fetch('/api/narrative-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId:     appState.sessionId,
+        signal:        appState.signal,
+        headline:      appState.headline,
+        story:         appState.story,
+        analysisRaw:   appState.analysisRaw,
+        stage:         appState.stage,
+        lens:          appState.lens,
+        narrativeName: appState.analysisSections?.defaultNarrative?.name || appState.headline
+      })
+    });
+    const data = await res.json();
+    if (data.report) {
+      appState.narrativeReport = data.report;
+      saveSessionToStorage();
+    }
+  } catch (e) {
+    // silent fail — user is unaffected
+  }
 }
 
 // ─── RESTART ─────────────────────────────────────

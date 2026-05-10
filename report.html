@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Default Narrative Report — Modern Myths</title>
+  <link rel="icon" id="favicon-link" type="image/png" href="">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      color: #f0ece4;
+      font-family: Georgia, serif;
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 80px 24px 120px;
+    }
+
+    .state { display: none; }
+    .state.active { display: block; }
+
+    /* ── Loading ── */
+    #state-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 24px;
+    }
+    #state-loading.active { display: flex; }
+    #loading-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(240,236,228,0.35);
+    }
+
+    /* ── Error ── */
+    #state-error { text-align: center; padding-top: 120px; }
+    .error-heading {
+      font-size: 1.1rem;
+      color: rgba(240,236,228,0.7);
+      margin-bottom: 12px;
+    }
+    .error-sub {
+      font-size: 0.85rem;
+      color: rgba(240,236,228,0.35);
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+    .error-link {
+      font-size: 0.8rem;
+      color: rgba(184,115,51,0.7);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+    .error-link:hover { color: #b87333; }
+
+    /* ── Teaser ── */
+    .report-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #b87333;
+      margin-bottom: 16px;
+    }
+    .narrative-name {
+      font-family: Georgia, serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      color: #f0ece4;
+      line-height: 1.25;
+      margin-bottom: 32px;
+      font-weight: normal;
+    }
+    .report-para {
+      font-family: Georgia, serif;
+      font-size: 1rem;
+      color: rgba(240,236,228,0.88);
+      line-height: 1.75;
+      margin-bottom: 20px;
+    }
+    .report-divider {
+      border: none;
+      border-top: 1px solid rgba(184,115,51,0.15);
+      margin: 36px 0;
+    }
+    .blurred-wrapper {
+      position: relative;
+      overflow: hidden;
+    }
+    .blurred-content {
+      filter: blur(4px);
+      pointer-events: none;
+      user-select: none;
+    }
+    .blurred-fade {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 140px;
+      background: linear-gradient(to bottom, transparent, #0a0a0a);
+      pointer-events: none;
+    }
+    .lock-block {
+      text-align: center;
+      padding: 48px 24px;
+      border: 1px solid rgba(184,115,51,0.2);
+      border-radius: 6px;
+      margin-top: 40px;
+      background: rgba(184,115,51,0.03);
+    }
+    .lock-block-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #b87333;
+      margin-bottom: 16px;
+    }
+    .lock-block-heading {
+      font-family: Georgia, serif;
+      font-size: 1.2rem;
+      color: #f0ece4;
+      margin-bottom: 14px;
+      font-weight: normal;
+    }
+    .lock-block-body {
+      font-size: 0.85rem;
+      color: rgba(240,236,228,0.5);
+      line-height: 1.7;
+      margin-bottom: 28px;
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── Full report ── */
+    .report-section-heading {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #b87333;
+      margin: 40px 0 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(184,115,51,0.25);
+    }
+    .report-bold-line {
+      font-weight: 600;
+      color: #f0ece4;
+      margin: 20px 0 6px;
+    }
+    .report-blockquote {
+      border-left: 2px solid #b87333;
+      padding-left: 16px;
+      margin: 16px 0;
+      font-style: italic;
+      color: rgba(240,236,228,0.7);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-block;
+      background: #b87333;
+      color: #ffffff;
+      border: none;
+      padding: 13px 28px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #a0622b; }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(184,115,51,0.45);
+      color: rgba(240,236,228,0.75);
+    }
+    .btn-ghost:hover { border-color: #b87333; color: #f0ece4; background: transparent; }
+
+    /* ── Share / download row ── */
+    .action-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 40px;
+      padding-top: 28px;
+      border-top: 1px solid rgba(184,115,51,0.12);
+    }
+
+    /* ── Bottom CTA ── */
+    .bottom-cta {
+      margin-top: 64px;
+      padding: 40px 32px;
+      border: 1px solid rgba(184,115,51,0.18);
+      border-radius: 6px;
+      text-align: center;
+    }
+    .bottom-cta-label {
+      font-size: 0.85rem;
+      color: rgba(240,236,228,0.55);
+      margin-bottom: 8px;
+    }
+    .bottom-cta-price {
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(240,236,228,0.35);
+      margin-bottom: 20px;
+    }
+
+    /* ── Footer ── */
+    .report-footer {
+      text-align: center;
+      margin-top: 80px;
+      font-size: 11px;
+      color: rgba(240,236,228,0.25);
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Share toast ── */
+    .share-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: rgba(184,115,51,0.9);
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 4px;
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .share-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Admin badge ── */
+    #admin-badge {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #b87333;
+      display: none;
+    }
+
+    @media (max-width: 600px) {
+      .page { padding: 48px 16px 80px; }
+      .lock-block { padding: 32px 16px; }
+      .action-row { flex-direction: column; align-items: stretch; }
+      .action-row .btn, .action-row button { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="state-loading" class="state active">
+  <canvas id="radar-canvas" width="80" height="80"></canvas>
+  <p id="loading-label">Retrieving your report…</p>
+</div>
+
+<!-- Error -->
+<div id="state-error" class="state">
+  <div class="page">
+    <p class="error-heading">Report not found.</p>
+    <p class="error-sub">This link may have expired or the session was not completed.</p>
+    <a href="https://early-warning-system-kappa.vercel.app" class="error-link">← Start a new sprint</a>
+  </div>
+</div>
+
+<!-- Teaser (found, not paid) -->
+<div id="state-teaser" class="state">
+  <div class="page">
+    <p class="report-label">Your Default Narrative</p>
+    <h1 class="narrative-name" id="teaser-narrative-name"></h1>
+    <div id="teaser-first-para"></div>
+
+    <hr class="report-divider">
+
+    <div class="blurred-wrapper">
+      <div class="blurred-content" id="teaser-blurred-paras"></div>
+      <div class="blurred-fade"></div>
+    </div>
+
+    <div class="lock-block">
+      <p class="lock-block-label">Your Default Narrative Report</p>
+      <p class="lock-block-heading">See where this narrative leads.</p>
+      <p class="lock-block-body">Four vignettes — 1, 3, 5, and 10 years — showing the world this narrative builds if it stays unexamined. Written from your story, in your words.</p>
+      <a id="stripe-btn" href="#" class="btn">$30 — Unlock full report</a>
+    </div>
+
+    <p class="report-footer">Modern Myths · Mohammad Khan</p>
+  </div>
+</div>
+
+<!-- Full report (paid or admin) -->
+<div id="state-full" class="state">
+  <div class="page">
+    <p class="report-label">Default Narrative Report</p>
+    <h1 class="narrative-name" id="full-narrative-name"></h1>
+
+    <div id="full-report-text"></div>
+
+    <div class="action-row">
+      <button class="btn btn-ghost" onclick="downloadPDF()">↓ Download PDF</button>
+      <button class="btn btn-ghost" onclick="copyShareLink()">↗ Copy share link</button>
+    </div>
+
+    <div class="bottom-cta">
+      <p class="bottom-cta-label">Want to examine what to do about it?</p>
+      <p class="bottom-cta-price">One session · 90 minutes · $500</p>
+      <a href="https://tidycal.com/mohammadukhan135/uncover-your-myth" class="btn">Book a session</a>
+    </div>
+
+    <p class="report-footer">Modern Myths · Mohammad Khan</p>
+  </div>
+</div>
+
+<div id="share-toast" class="share-toast"></div>
+<div id="admin-badge">Admin mode</div>
+
+<script>
+// ── Radar favicon ─────────────────────────────────
+(function() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64; canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  const cx = 32, cy = 32, r = 28;
+  let angle = 0;
+  const dots = [
+    { a: 0.8, d: 0.55 }, { a: 1.4, d: 0.75 }, { a: 2.1, d: 0.45 },
+    { a: 3.5, d: 0.65 }, { a: 4.2, d: 0.80 }, { a: 5.1, d: 0.50 },
+  ];
+  function drawFrame() {
+    ctx.clearRect(0, 0, 64, 64);
+    ctx.fillStyle = '#0a0a0a';
+    ctx.beginPath(); ctx.arc(cx, cy, 32, 0, Math.PI * 2); ctx.fill();
+    [0.35, 0.65, 1].forEach(s => {
+      ctx.beginPath(); ctx.arc(cx, cy, r * s, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(184,115,51,0.2)'; ctx.lineWidth = 0.8; ctx.stroke();
+    });
+    ctx.strokeStyle = 'rgba(184,115,51,0.12)'; ctx.lineWidth = 0.6;
+    ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy); ctx.stroke();
+    dots.forEach(dot => {
+      let delta = angle - dot.a; if (delta < 0) delta += Math.PI * 2;
+      const decay = 1 - delta / (Math.PI * 2);
+      if (decay > 0.02) {
+        ctx.beginPath(); ctx.arc(cx + Math.cos(dot.a) * r * dot.d, cy + Math.sin(dot.a) * r * dot.d, 2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(184,115,51,${decay * 0.9})`; ctx.fill();
+      }
+    });
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle);
+    const g = ctx.createLinearGradient(0, 0, r, 0);
+    g.addColorStop(0, 'rgba(184,115,51,0.7)'); g.addColorStop(1, 'rgba(184,115,51,0)');
+    ctx.strokeStyle = g; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(r, 0); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, angle - 0.6, angle);
+    ctx.closePath(); ctx.fillStyle = 'rgba(184,115,51,0.06)'; ctx.fill(); ctx.restore();
+    ctx.beginPath(); ctx.arc(cx, cy, 2, 0, Math.PI * 2); ctx.fillStyle = '#b87333'; ctx.fill();
+    angle = (angle + 0.06) % (Math.PI * 2);
+    const link = document.getElementById('favicon-link');
+    if (link) link.href = canvas.toDataURL('image/png');
+  }
+  setInterval(drawFrame, 50); drawFrame();
+})();
+
+// ── Loading radar (visible on page) ───────────────
+(function() {
+  const canvas = document.getElementById('radar-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx = 40, cy = 40, r = 32;
+  let angle = 0;
+  const dots = [
+    { a: 0.8, d: 0.55 }, { a: 1.4, d: 0.75 }, { a: 2.1, d: 0.45 },
+    { a: 3.5, d: 0.65 }, { a: 4.2, d: 0.80 }, { a: 5.1, d: 0.50 },
+  ];
+  function draw() {
+    ctx.clearRect(0, 0, 80, 80);
+    ctx.fillStyle = '#0a0a0a';
+    ctx.beginPath(); ctx.arc(cx, cy, 40, 0, Math.PI * 2); ctx.fill();
+    [0.35, 0.65, 1].forEach(s => {
+      ctx.beginPath(); ctx.arc(cx, cy, r * s, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(184,115,51,0.25)'; ctx.lineWidth = 1; ctx.stroke();
+    });
+    ctx.strokeStyle = 'rgba(184,115,51,0.15)'; ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy); ctx.stroke();
+    dots.forEach(dot => {
+      let delta = angle - dot.a; if (delta < 0) delta += Math.PI * 2;
+      const decay = 1 - delta / (Math.PI * 2);
+      if (decay > 0.02) {
+        ctx.beginPath(); ctx.arc(cx + Math.cos(dot.a) * r * dot.d, cy + Math.sin(dot.a) * r * dot.d, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(184,115,51,${decay * 0.9})`; ctx.fill();
+      }
+    });
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle);
+    const g = ctx.createLinearGradient(0, 0, r, 0);
+    g.addColorStop(0, 'rgba(184,115,51,0.8)'); g.addColorStop(1, 'rgba(184,115,51,0)');
+    ctx.strokeStyle = g; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(r, 0); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, angle - 0.6, angle);
+    ctx.closePath(); ctx.fillStyle = 'rgba(184,115,51,0.07)'; ctx.fill(); ctx.restore();
+    ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI * 2); ctx.fillStyle = '#b87333'; ctx.fill();
+    angle = (angle + 0.06) % (Math.PI * 2);
+  }
+  setInterval(draw, 50); draw();
+})();
+
+// ── Page logic ────────────────────────────────────
+const params    = new URLSearchParams(location.search);
+const sessionId = params.get('session');
+const isPaid    = params.get('paid') === 'true';
+const isAdmin   = params.get('admin') === 'true';
+
+let reportData  = null;
+
+function showState(id) {
+  document.querySelectorAll('.state').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showError() { showState('state-error'); }
+
+function parseParagraphs(text) {
+  return text.split(/\n\n+/).map(p => p.trim()).filter(p => p.length > 20);
+}
+
+function renderMarkdown(text) {
+  return text
+    .replace(/^## (.+)$/gm, '<p class="report-section-heading">$1</p>')
+    .replace(/^\*\*(.+?)\*\*$/gm, '<p class="report-bold-line">$1</p>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#f0ece4;">$1</strong>')
+    .replace(/^> (.+)$/gm, '<p class="report-blockquote">$1</p>')
+    .replace(/\n\n/g, '</p><p class="report-para">')
+    .replace(/\n/g, '<br>');
+}
+
+function renderTeaser(data) {
+  document.getElementById('teaser-narrative-name').textContent = data.narrativeName || '';
+
+  const paras = parseParagraphs(data.narrativeReport);
+  const firstPara = paras[0] || '';
+  const blurredParas = paras.slice(1, 4);
+
+  document.getElementById('teaser-first-para').innerHTML =
+    `<p class="report-para">${firstPara.replace(/\n/g, '<br>')}</p>`;
+
+  document.getElementById('teaser-blurred-paras').innerHTML =
+    blurredParas.map(p => `<p class="report-para">${p.replace(/\n/g, '<br>')}</p>`).join('');
+
+  const successUrl = encodeURIComponent(
+    `https://early-warning-system-kappa.vercel.app/report?session=${sessionId}&paid=true`
+  );
+  document.getElementById('stripe-btn').href =
+    `https://buy.stripe.com/3cI5kD3EofwM4N41e14wM04?client_reference_id=${sessionId}&success_url=${successUrl}`;
+
+  showState('state-teaser');
+}
+
+function renderFull(data) {
+  document.getElementById('full-narrative-name').textContent = data.narrativeName || '';
+
+  const html = renderMarkdown(data.narrativeReport);
+  document.getElementById('full-report-text').innerHTML =
+    '<p class="report-para">' + html + '</p>';
+
+  if (isAdmin) {
+    document.getElementById('admin-badge').style.display = 'block';
+  }
+
+  showState('state-full');
+}
+
+function copyShareLink() {
+  const url = `https://early-warning-system-kappa.vercel.app/report?session=${sessionId}&paid=true`;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => showToast('Link copied')).catch(() => prompt('Copy link:', url));
+  } else {
+    prompt('Copy link:', url);
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('share-toast');
+  t.textContent = msg;
+  t.classList.add('visible');
+  setTimeout(() => t.classList.remove('visible'), 2500);
+}
+
+function downloadPDF() {
+  if (!reportData) return;
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+    const margin = 72, pageW = doc.internal.pageSize.getWidth(), pageH = doc.internal.pageSize.getHeight();
+    const usableW = pageW - margin * 2;
+    let y = margin;
+
+    function checkPage(needed) {
+      if (y + needed > pageH - margin) { doc.addPage(); y = margin; }
+    }
+
+    // Cover
+    doc.setFont('times', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(184, 115, 51);
+    doc.text('DEFAULT NARRATIVE REPORT', margin, y);
+    y += 24;
+    doc.setFont('times', 'normal');
+    doc.setFontSize(22);
+    doc.setTextColor(240, 236, 228);
+    const nameLines = doc.splitTextToSize(reportData.narrativeName || '', usableW);
+    doc.text(nameLines, margin, y);
+    y += nameLines.length * 28 + 16;
+    doc.setFontSize(9);
+    doc.setTextColor(120, 116, 110);
+    doc.text('Modern Myths · Mohammad Khan', margin, y);
+    y += 8;
+    doc.text(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), margin, y);
+    y += 48;
+    doc.setDrawColor(184, 115, 51);
+    doc.setLineWidth(0.4);
+    doc.line(margin, y, pageW - margin, y);
+    y += 40;
+
+    // Body
+    const lines = reportData.narrativeReport.split('\n');
+    lines.forEach(line => {
+      const clean = line.trim();
+      if (!clean) { y += 10; return; }
+      if (clean.startsWith('## ')) {
+        checkPage(36);
+        doc.setFont('times', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(184, 115, 51);
+        doc.text(clean.replace('## ', '').toUpperCase(), margin, y);
+        y += 20;
+      } else if (clean.startsWith('**') && clean.endsWith('**')) {
+        checkPage(24);
+        doc.setFont('times', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(240, 236, 228);
+        const t = doc.splitTextToSize(clean.replace(/\*\*/g, ''), usableW);
+        doc.text(t, margin, y);
+        y += t.length * 16;
+      } else {
+        checkPage(18);
+        doc.setFont('times', 'normal');
+        doc.setFontSize(11);
+        doc.setTextColor(220, 216, 208);
+        const t = doc.splitTextToSize(clean.replace(/\*\*(.+?)\*\*/g, '$1'), usableW);
+        doc.text(t, margin, y);
+        y += t.length * 16;
+      }
+    });
+
+    const isMobileSafari = /iP(ad|hone|od)/.test(navigator.userAgent) && /WebKit/.test(navigator.userAgent) && !window.MSStream;
+    if (isMobileSafari) {
+      window.open(doc.output('bloburl'), '_blank');
+    } else {
+      doc.save('default-narrative-report.pdf');
+    }
+  } catch (e) {
+    console.error('PDF error:', e);
+  }
+}
+
+// ── Fetch with retry ──────────────────────────────
+async function fetchReport(retriesLeft) {
+  try {
+    const res = await fetch(`/api/report-fetch?session=${encodeURIComponent(sessionId)}`);
+    if (res.status === 404) {
+      if (retriesLeft > 0) {
+        document.getElementById('loading-label').textContent = 'Report is generating — checking again…';
+        setTimeout(() => fetchReport(retriesLeft - 1), 5000);
+      } else {
+        showError();
+      }
+      return;
+    }
+    if (!res.ok) { showError(); return; }
+    const json = await res.json();
+    if (!json.success || !json.data) { showError(); return; }
+    reportData = json.data;
+    if (isAdmin || isPaid) {
+      renderFull(reportData);
+    } else {
+      renderTeaser(reportData);
+    }
+  } catch (e) {
+    if (retriesLeft > 0) {
+      setTimeout(() => fetchReport(retriesLeft - 1), 5000);
+    } else {
+      showError();
+    }
+  }
+}
+
+// ── Init ──────────────────────────────────────────
+if (!sessionId) {
+  showError();
+} else {
+  fetchReport(6);
+}
+</script>
+
+</body>
+</html>
