@@ -2078,19 +2078,6 @@
         <p class="teaser-body" style="font-family:Georgia,serif; font-size:13px; color:rgba(240,236,228,0.65); line-height:1.75; margin:0; padding-bottom:56px;"></p>
         <div style="position:absolute; bottom:0; left:0; right:0; height:72px; background:linear-gradient(to bottom, transparent, #0d0d0a); pointer-events:none;"></div>
       </div>
-      <p style="font-size:13px; color:rgba(240,236,228,0.4); margin:0 0 16px; font-style:italic;">See where this leads if nothing interrupts it.</p>
-      <a href="https://buy.stripe.com/3cI5kD3EofwM4N41e14wM04"
-         target="_blank"
-         onclick="if(appState.adminMode){event.preventDefault();generateNarrativeReport();}"
-         style="display:inline-block; background:#b87333; color:#fff; padding:13px 28px; border-radius:4px; text-decoration:none; font-size:14px; font-family:system-ui,sans-serif; letter-spacing:0.03em;">
-        Get the full report — $30
-      </a>
-      <p style="font-size:11px; color:rgba(240,236,228,0.22); margin-top:10px; font-style:italic;">One-time. Opens in a new tab — your data stays here.</p>
-      <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(184,115,51,0.12);">
-        <button id="see-full-report-btn" class="btn" onclick="window.open('https://early-warning-system-kappa.vercel.app/report?session=' + appState.sessionId, '_blank')" style="background:transparent; border:1px solid rgba(184,115,51,0.4); color:rgba(240,236,228,0.7); font-size:13px; padding:10px 22px;">
-          See your full report
-        </button>
-      </div>
     </div>
 
     <button class="btn" id="see-narrative-btn" onclick="goToNarrativePage()" style="display:none; margin-top:16px;">
@@ -4376,10 +4363,10 @@ function restoreSessionOnLoad() {
 function buildReportTeaser() {
   const raw = appState.analysisRaw || '';
 
-  const nameMatch = raw.match(/NAME IT\s*\n+([^\n]+)/i);
-  const narrativeName = nameMatch ? nameMatch[1].trim() : '';
+  const nameMatch = raw.match(/\*{0,2}NAME IT\*{0,2}\s*\n+([^\n]+)/i);
+  const narrativeName = nameMatch ? nameMatch[1].replace(/^\*+|\*+$/g, '').trim() : '';
 
-  const whyMatch = raw.match(/WHY IT MATTERS\s*\n+([\s\S]*?)(?=\n\n(?:THE EVIDENCE|WHAT IT COSTS|ONE MOVE|\s*##)|$)/i);
+  const whyMatch = raw.match(/\*{0,2}WHY IT MATTERS\*{0,2}\s*\n+([\s\S]*?)(?=\n\n(?:\*{0,2}(?:THE EVIDENCE|WHAT IT COSTS|ONE MOVE)\*{0,2}|\s*##)|$)/i);
   let teaserBody = '';
   if (whyMatch) {
     const sentences = (whyMatch[1].trim().match(/[^.!?]*[.!?]+/g) || []).filter(s => s.trim().length > 3);
