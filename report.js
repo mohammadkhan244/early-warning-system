@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var reportData = null;
 
-  // ── State management ────────────────────────────
+  // ── State management ─────────────────────────────
   function showState(id) {
     document.querySelectorAll('.state').forEach(function (el) {
       el.classList.remove('active');
@@ -107,31 +107,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById(id).classList.add('active');
   }
 
-  // ── Helpers ─────────────────────────────────────
-  function parseParagraphs(text) {
-    return text.split(/\n\n+/).map(function (p) { return p.trim(); }).filter(function (p) { return p.length > 10; });
-  }
-
-  function renderFullReport(text) {
-    var paras = parseParagraphs(text);
-    return paras.map(function (p) {
-      if (p.startsWith('## ')) {
-        return '<h2 class="report-section-heading">' + esc(p.slice(3)) + '</h2>';
-      }
-      if (/^\*\*[^*]+\*\*$/.test(p)) {
-        return '<p class="report-bold-line">' + esc(p.slice(2, -2)) + '</p>';
-      }
-      var html = p
-        .replace(/\*\*(.+?)\*\*/g, function (_, m) { return '<strong style="color:#f0ece4;">' + esc(m) + '</strong>'; })
-        .replace(/\n/g, '<br>');
-      return '<p class="report-para">' + html + '</p>';
-    }).join('');
-  }
-
-  function esc(str) {
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
+  // ── Helpers ──────────────────────────────────────
   function showToast(msg) {
     var t = document.getElementById('share-toast');
     t.textContent = msg;
@@ -151,33 +127,134 @@ document.addEventListener('DOMContentLoaded', function () {
     URL.revokeObjectURL(url);
   }
 
-  // ── Render teaser ────────────────────────────────
-  function renderTeaser(data) {
-    document.getElementById('teaser-narrative-name').textContent = data.narrativeName || '';
+  // ── CHANGE 1: renderReport ────────────────────────
+  function renderReport(text, container) {
+    container.innerHTML = '';
+    var blocks = text.split(/\n\n+/);
+    blocks.forEach(function (block) {
+      var trimmed = block.trim();
+      if (!trimmed) return;
+      if (trimmed.startsWith('## ')) {
+        var h2 = document.createElement('h2');
+        h2.textContent = trimmed.replace(/^## /, '');
+        h2.style.cssText = 'font-family:Georgia,serif;font-size:clamp(1.1rem,2.5vw,1.5rem);color:#b87333;letter-spacing:0.08em;text-transform:uppercase;margin:32px 0 12px;font-weight:normal;';
+        container.appendChild(h2);
+      } else if (trimmed.startsWith('**') && trimmed.endsWith('**') && !trimmed.slice(2, -2).includes('**')) {
+        var h3 = document.createElement('h3');
+        h3.textContent = trimmed.slice(2, -2);
+        h3.style.cssText = 'font-family:Georgia,serif;font-size:1rem;color:#f0ece4;font-weight:bold;margin:20px 0 6px;';
+        container.appendChild(h3);
+      } else {
+        var p = document.createElement('p');
+        p.innerHTML = trimmed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        p.style.cssText = 'font-family:Georgia,serif;font-size:1rem;color:rgba(240,236,228,0.88);line-height:1.75;margin-bottom:16px;';
+        container.appendChild(p);
+      }
+    });
+  }
 
-    var paras      = parseParagraphs(data.narrativeReport);
-    var firstPara  = paras[0] || '';
-    var blurParas  = paras.slice(1, 4);
+  // ── CHANGE 2: renderTeaser ────────────────────────
+  function renderTeaser(reportText, narrativeName, sid) {
+    var blocks = reportText.split(/\n\n+/).map(function (b) { return b.trim(); }).filter(Boolean);
 
-    document.getElementById('teaser-first-para').innerHTML =
-      '<p class="report-para">' + firstPara.replace(/\n/g, '<br>') + '</p>';
+    var lensBlocks = [];
+    var afterLensBlocks = [];
+    var inLens = false;
+    var lensEnded = false;
 
-    document.getElementById('teaser-blurred-paras').innerHTML =
-      blurParas.map(function (p) {
-        return '<p class="report-para">' + p.replace(/\n/g, '<br>') + '</p>';
-      }).join('');
+    blocks.forEach(function (block) {
+      if (/^## THE LENS/i.test(block)) {
+        inLens = true;
+        return;
+      }
+      if (inLens && !lensEnded) {
+        if (block.startsWith('## ')) {
+          lensEnded = true;
+          afterLensBlocks.push(block);
+        } else {
+          lensBlocks.push(block);
+        }
+      } else if (lensEnded) {
+        afterLensBlocks.push(block);
+      }
+    });
 
-    var successUrl = 'https://early-warning-system-kappa.vercel.app/report?session=' + sessionId + '%26paid=true';
-    document.getElementById('stripe-btn').href =
-      'https://buy.stripe.com/3cI5kD3EofwM4N41e14wM04?client_reference_id=' + sessionId + '&success_url=' + successUrl;
+    if (lensBlocks.length === 0) {
+      lensBlocks = blocks.slice(0, 2);
+      afterLensBlocks = blocks.slice(2);
+    }
+
+    var container = document.getElementById('report-content');
+    container.innerHTML = '';
+
+    // Narrative name
+    var nameEl = document.createElement('div');
+    nameEl.style.cssText = 'margin-bottom:32px;';
+    nameEl.innerHTML =
+      '<div style="font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;color:#b87333;margin-bottom:12px;">YOUR DEFAULT NARRATIVE</div>' +
+      '<h1 style="font-family:Georgia,serif;font-size:clamp(2.2rem,6vw,4rem);color:#f0ece4;font-weight:normal;line-height:1.2;margin:0;">' + narrativeName + '</h1>';
+    container.appendChild(nameEl);
+
+    // THE LENS label
+    var lensLabel = document.createElement('h2');
+    lensLabel.textContent = 'THE LENS';
+    lensLabel.style.cssText = 'font-family:Georgia,serif;font-size:clamp(1.1rem,2.5vw,1.5rem);color:#b87333;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 16px;font-weight:normal;';
+    container.appendChild(lensLabel);
+
+    // Visible lens content
+    var lensContainer = document.createElement('div');
+    lensBlocks.forEach(function (block) {
+      var p = document.createElement('p');
+      p.innerHTML = block.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      p.style.cssText = 'font-family:Georgia,serif;font-size:1rem;color:rgba(240,236,228,0.88);line-height:1.75;margin-bottom:16px;';
+      lensContainer.appendChild(p);
+    });
+    container.appendChild(lensContainer);
+
+    // Divider
+    var divider = document.createElement('hr');
+    divider.style.cssText = 'border:none;border-top:1px solid rgba(240,236,228,0.08);margin:32px 0;';
+    container.appendChild(divider);
+
+    // Blurred section
+    var blurWrapper = document.createElement('div');
+    blurWrapper.style.cssText = 'position:relative;height:280px;overflow:hidden;pointer-events:none;user-select:none;';
+
+    var blurContent = document.createElement('div');
+    blurContent.style.cssText = 'filter:blur(5px);opacity:0.5;';
+    afterLensBlocks.slice(0, 6).forEach(function (block) {
+      var p = document.createElement('p');
+      p.innerHTML = block.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      p.style.cssText = 'font-family:Georgia,serif;font-size:1rem;color:rgba(240,236,228,0.88);line-height:1.75;margin-bottom:16px;';
+      blurContent.appendChild(p);
+    });
+    blurWrapper.appendChild(blurContent);
+
+    var fadeOverlay = document.createElement('div');
+    fadeOverlay.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:180px;background:linear-gradient(transparent,#0a0a0a);pointer-events:none;';
+    blurWrapper.appendChild(fadeOverlay);
+    container.appendChild(blurWrapper);
+
+    // Lock block — CHANGE 3: Stripe opens in new tab
+    var lockBlock = document.createElement('div');
+    lockBlock.style.cssText = 'text-align:center;padding:40px 24px;border:1px solid rgba(184,115,51,0.25);border-radius:6px;margin-top:32px;background:rgba(184,115,51,0.04);';
+    var stripeUrl = 'https://buy.stripe.com/3cI5kD3EofwM4N41e14wM04?client_reference_id=' + sid +
+      '&success_url=' + encodeURIComponent('https://early-warning-system-kappa.vercel.app/report?session=' + sid + '&paid=true');
+    lockBlock.innerHTML =
+      '<div style="font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;color:#b87333;margin-bottom:12px;">YOUR DEFAULT NARRATIVE REPORT</div>' +
+      '<h2 style="font-family:Georgia,serif;font-size:1.4rem;color:#f0ece4;font-weight:normal;margin:0 0 12px;">See where this narrative leads.</h2>' +
+      '<p style="font-size:0.9rem;color:rgba(240,236,228,0.7);line-height:1.65;margin:0 0 28px;max-width:420px;margin-left:auto;margin-right:auto;">Four vignettes — 1, 3, 5, and 10 years — showing the world this narrative builds if it stays unexamined. Written from your story, in your words.</p>' +
+      '<a href="' + stripeUrl + '" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#b87333;color:#fff;border:none;border-radius:4px;padding:14px 32px;font-size:1rem;font-family:system-ui,sans-serif;letter-spacing:0.03em;cursor:pointer;text-decoration:none;">$30 — Unlock full report</a>' +
+      '<p style="font-size:0.75rem;color:rgba(240,236,228,0.35);margin-top:12px;">One-time. Opens in a new tab — your data stays here.</p>';
+    container.appendChild(lockBlock);
 
     showState('state-teaser');
   }
 
-  // ── Render full ──────────────────────────────────
+  // ── Render full ───────────────────────────────────
   function renderFull(data) {
     document.getElementById('full-narrative-name').textContent = data.narrativeName || '';
-    document.getElementById('full-report-text').innerHTML = renderFullReport(data.narrativeReport);
+    renderReport(data.narrativeReport, document.getElementById('full-report-text'));
 
     document.getElementById('download-btn').addEventListener('click', function () {
       downloadReport(data.narrativeReport);
@@ -201,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function () {
     showState('state-full');
   }
 
-  // ── Fetch with retry ─────────────────────────────
+  // ── Fetch with retry ──────────────────────────────
   function fetchReport(retriesLeft) {
     fetch('/api/report-fetch?session=' + encodeURIComponent(sessionId))
       .then(function (res) {
@@ -224,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (isAdmin || isPaid) {
           renderFull(reportData);
         } else {
-          renderTeaser(reportData);
+          renderTeaser(reportData.narrativeReport, reportData.narrativeName, sessionId);
         }
       })
       .catch(function () {
