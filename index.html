@@ -2092,6 +2092,10 @@
       </div>
     </div>
 
+    <button class="btn" id="see-narrative-btn" onclick="goToNarrativePage()" style="display:none; margin-top:16px;">
+      See your Default Narrative
+    </button>
+
     <div id="report-generating" style="display:none; margin-top:32px; text-align:center; padding:24px 0;">
       <p style="font-size:13px; color:rgba(240,236,228,0.5); font-style:italic;">Generating your report — this takes about a minute…</p>
     </div>
@@ -4079,6 +4083,10 @@ function showShareToast(msg) {
   setTimeout(() => t.classList.remove('visible'), 3000);
 }
 
+function goToNarrativePage() {
+  window.location.href = '/report?session=' + appState.sessionId;
+}
+
 // ─── BACKGROUND NARRATIVE GENERATION ────────────
 async function generateNarrativeReportBackground() {
   if (appState.narrativeReportGenerated) return;
@@ -4376,6 +4384,8 @@ function buildReportTeaser() {
 
   const locked = document.getElementById('report-locked');
   if (locked) locked.style.display = 'block';
+  const seeBtn = document.getElementById('see-narrative-btn');
+  if (seeBtn) seeBtn.style.display = 'inline-block';
 }
 
 // ─── NARRATIVE REPORT ────────────────────────────
