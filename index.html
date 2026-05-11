@@ -12,6 +12,8 @@
   <link rel="icon" id="favicon-link" type="image/png" href="">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Courier+Prime&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1679,6 +1681,33 @@
       opacity: 0.4;
     }
     .shelf-jar.full { opacity: 1; }
+
+    /* ── EWS context blurb (shared ?id= pages only) ── */
+    .ews-context-blurb {
+      display: none;
+      margin: 0 0 32px 0;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(240,236,228,0.08);
+    }
+    .ews-context-blurb .blurb-label {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #b87333;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .ews-context-blurb .blurb-text {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 0.82rem;
+      color: rgba(240,236,228,0.5);
+      line-height: 1.65;
+      max-width: 560px;
+    }
+    @media (max-width: 600px) {
+      .ews-context-blurb .blurb-text { font-size: 0.78rem; }
+    }
   </style>
 </head>
 <body>
@@ -1921,6 +1950,10 @@
 
     <!-- Analysis content -->
     <div class="analysis-container" id="analysis-container">
+      <div class="ews-context-blurb" id="ews-context-blurb">
+        <span class="blurb-label">What is this?</span>
+        <p class="blurb-text">What you're reading is an Early Warning System output — a 10-minute writing sprint that surfaces the narrative you're already living by. The story shaping every decision you make, without you realizing it. ORBIT uses this to find the people aligned with your worldview, not just your job title.</p>
+      </div>
       <button class="back-link" onclick="goBack()" style="margin-bottom:20px;">← back</button>
       <p class="analysis-note">This is built from your words, not generic advice.</p>
 
@@ -4844,6 +4877,7 @@ document.querySelectorAll('.stage').forEach(s => {
       document.getElementById('radar-loading').style.display = 'none';
       const container = document.getElementById('analysis-container');
       container.style.display = 'block';
+      document.getElementById('ews-context-blurb').style.display = 'block';
       const banner = document.createElement('div');
       banner.className = 'share-banner';
       banner.textContent = (appState.headline ? '”' + appState.headline + '” — ' : '') + 'Shared analysis';
