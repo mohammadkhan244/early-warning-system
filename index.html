@@ -4248,6 +4248,8 @@ function restartApp() {
 
 // ─── SESSION STORAGE ─────────────────────────────
 function saveSessionToStorage() {
+  if (new URLSearchParams(window.location.search).has('id') ||
+      new URLSearchParams(window.location.search).has('s')) return;
   try {
     localStorage.setItem('wyfSession', JSON.stringify({
       signal:          appState.signal,
@@ -4856,6 +4858,7 @@ document.querySelectorAll('.stage').forEach(s => {
 
   // Shared analysis view — renders for both ?id= (KV) and legacy ?s= (LZString)
   const urlParams = new URLSearchParams(location.search);
+  const isSharedView = urlParams.has('id') || urlParams.has('s');
 
   function mountSharedView(payload) {
     appState.headline    = payload.headline    || '';
@@ -4910,11 +4913,11 @@ document.querySelectorAll('.stage').forEach(s => {
   }
 
   // Check for ?report=true from Stripe redirect
-  if (!urlParams.get('report')) {
+  if (!isSharedView && !urlParams.get('report')) {
     restoreSessionOnLoad();
   }
 
-  if (urlParams.get('report') === 'true') {
+  if (!isSharedView && urlParams.get('report') === 'true') {
     history.replaceState({}, '', location.pathname + (appState.adminMode ? '?admin=true' : ''));
     const restored = restoreSessionFromStorage();
     if (restored) {
